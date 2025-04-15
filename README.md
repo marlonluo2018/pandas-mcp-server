@@ -18,7 +18,6 @@ This repository contains a server implementation using the Model Context Protoco
   - A dictionary containing the columns and sample data from the CSV file.
 - **Notes**:
   - Detects file encoding and delimiter automatically.
-  - Uses Dask for large files (greater than 50MB) to handle memory efficiently. Dask is a parallel computing library that allows processing larger-than-memory datasets by breaking them into smaller chunks and processing them in parallel.
   - Limits file size to 100MB to prevent excessive memory usage.
 
 ### run_pandas_code
