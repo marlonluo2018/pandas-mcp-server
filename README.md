@@ -53,6 +53,7 @@ Configure your MCP client (e.g. Cursor, Claude, or VS Code with Cline plugin) wi
     }
   }
 }
+'''
 
 2. Use an MCP client to interact with the server and utilize the provided tools.
 
