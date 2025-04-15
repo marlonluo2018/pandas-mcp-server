@@ -34,7 +34,6 @@ This repository contains a server implementation using the Model Context Protoco
 
 ## Usage
 
-## Usage
 
 ### 1. MCP Client Configuration
 Configure your MCP client (e.g. Cursor, Claude, or VS Code with Cline plugin) with this JSON configuration:
