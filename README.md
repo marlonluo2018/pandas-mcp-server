@@ -34,9 +34,7 @@ This repository contains a server implementation using the Model Context Protoco
 
 ## Usage
 
-### 1. MCP Client Configuration
-Configure your MCP client with this JSON configuration:
-
+1. Configure your MCP client with the following settings:
 ```json
 {
   "mcpServers": {
@@ -52,18 +50,7 @@ Configure your MCP client with this JSON configuration:
     }
   }
 }
+```
+2. Use the configured MCP client to interact with the server and utilize the provided tools.
 
-2. Use an MCP client to interact with the server and utilize the provided tools.
 
-## Testing
-
-- Run the tests: `python test.py`
-- This will execute the test cases for both `load_csv_tool` and `run_pandas_code`.
-
-## Contributing
-
-Feel free to contribute by submitting issues or pull requests. For major changes, please open an issue first to discuss what you would like to change.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
