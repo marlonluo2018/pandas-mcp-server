@@ -1,50 +1,80 @@
 from mcp.server.fastmcp import FastMCP
-
-import traceback  
+import pandas as pd
+import os
+from chardet import detect
+import traceback
+from io import StringIO
+import sys
 
 mcp = FastMCP("PandasAgent")
 
+# Constants
+MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
+BLACKLIST = ['os.', 'sys.', 'subprocess.', 'open(', 'exec(', 'eval(', 'import os', 'import sys']
 
 @mcp.tool()
 def load_csv_tool(file_path: str) -> dict:
     """
-    MCP专用CSV加载工具（解决框架集成问题）
+    Load CSV file and return metadata in MCP-compatible format
     
-    特殊处理：
-    1. 强制UTF-8编码读取
-    2. 限制最大文件大小（10MB）
-    3. 返回MCP兼容的简化格式
+    Args:
+        file_path: Absolute path to CSV
+        
+    Returns:
+        dict: Structured metadata including:
+        - columns: List with name/type/sample for each column
+        - file_info: Size and encoding details
+        - status: SUCCESS/ERROR indicator
+        
+    Example:
+    >>> load_csv_tool("/path/to/file.csv")
+    {
+        "status": "SUCCESS",
+        "columns": [
+            {"name": "id", "type": "int64", "sample": [1, 2]},
+            {"name": "name", "type": "object", "sample": ["Alice", "Bob"]}
+        ],
+        "file_info": {
+            "size": "45.3KB",
+            "encoding": "utf-8"
+        }
+    }
     """
-    import pandas as pd
-    import os
-    from chardet import detect
-    import traceback
-
-    # MCP环境专用配置
-    MCP_MAX_SIZE = 10 * 1024 * 1024  # 10MB
-    
     try:
-        # 验证文件基础信息（MCP环境可能权限不同）
+        # Validate file existence and size
         if not os.path.exists(file_path):
-            return {"error": "FILE_NOT_FOUND", "path": file_path}
+            return {"status": "ERROR", "error": "FILE_NOT_FOUND", "path": file_path}
             
-        if os.path.getsize(file_path) > MCP_MAX_SIZE:
-            return {"error": "FILE_TOO_LARGE", "max_size": f"{MCP_MAX_SIZE/1024/1024}MB"}
+        file_size = os.path.getsize(file_path)
+        if file_size > MAX_FILE_SIZE:
+            return {
+                "status": "ERROR",
+                "error": "FILE_TOO_LARGE",
+                "max_size": f"{MAX_FILE_SIZE/1024/1024}MB",
+                "actual_size": f"{file_size/1024/1024:.1f}MB"
+            }
 
-        # MCP环境下更可靠的编码检测
+        # Detect encoding and delimiter
         with open(file_path, 'rb') as f:
-            rawdata = f.read(50000)  # 50KB足够检测编码
+            rawdata = f.read(50000)
             enc = detect(rawdata)['encoding'] or 'utf-8'
-        
-        # 使用更安全的读取方式
-        df = pd.read_csv(
-            file_path,
-            encoding=enc,
-            nrows=100,  # 仅读取前100行分析
-            on_bad_lines='skip'  # 自动跳过问题行
-        )
-        
-        # 返回MCP专用简化格式
+            
+        with open(file_path, 'r', encoding=enc) as f:
+            first_line = f.readline()
+            delimiter = ',' if ',' in first_line else '\t' if '\t' in first_line else ';'
+
+        # Try using dask for large files
+        if file_size > MAX_FILE_SIZE:
+            return {
+                "status": "ERROR",
+                "error": "FILE_TOO_LARGE",
+                "max_size": f"{MAX_FILE_SIZE/1024/1024}MB",
+                "actual_size": f"{file_size/1024/1024:.1f}MB"
+            }
+        else:
+            df = pd.read_csv(file_path, encoding=enc, delimiter=delimiter, nrows=100)
+
+        # Format response
         return {
             "status": "SUCCESS",
             "columns": [
@@ -56,70 +86,65 @@ def load_csv_tool(file_path: str) -> dict:
                 for col in df.columns
             ],
             "file_info": {
-                "size": f"{os.path.getsize(file_path)/1024:.1f}KB",
-                "encoding": enc
+                "size": f"{file_size/1024:.1f}KB",
+                "encoding": enc,
+                "delimiter": delimiter
             }
         }
 
     except Exception as e:
-        # MCP需要的错误格式
         return {
             "status": "ERROR",
             "error_type": type(e).__name__,
             "message": str(e),
             "solution": [
-                "检查文件是否被其他程序占用",
-                "尝试重新保存为UTF-8编码的CSV",
-                "联系管理员查看MCP文件访问权限"
-            ]
+                "Check if the file is being used by another program",
+                "Try saving the file as UTF-8 encoded CSV",
+                "Contact the administrator to check MCP file access permissions"
+            ],
+            "traceback": traceback.format_exc()
         }
-
 
 @mcp.tool()
 def run_pandas_code(code: str) -> dict:
     """
-    Execute pandas code with smart suggestions
+    Execute pandas code with smart suggestions and security checks
     
     Requirements:
     - Must contain full import and file loading logic
     - Must assign final result to 'result' variable
     
-    Smart Suggestions:
-    1. For string columns: 
-       df['col'] = df['col'].astype(str).str.strip()
-    2. For numeric comparisons:
-       df['col'] = pd.to_numeric(df['col'], errors='coerce')
-    3. For path handling:
-       Use raw strings: r"path\\to\\file.csv"
-    4. For null handling:
-       .fillna() before operations
-    
-    Example Correct Code:
-    import pandas as pd
-    df = pd.read_csv(r"path\\to\\file.csv")
-    df['Category'] = df['Category'].astype(str).str.strip()
-    result = df[df['Category'] == 'D'].shape[0]
+    Returns:
+        dict: Either the result or error information
+        
+    Example:
+    >>> run_pandas_code('''
+    ... import pandas as pd
+    ... df = pd.DataFrame({'A': [1,2], 'B': [3,4]})
+    ... result = df.sum()
+    ... ''')
+    {
+        "result": {
+            "type": "series",
+            "data": {"A": 3, "B": 7},
+            "dtype": "int64"
+        }
+    }
     """
-    import pandas as pd
-    import traceback
-    from io import StringIO
-    import sys
-    import re
+    # Security checks
+    for forbidden in BLACKLIST:
+        if forbidden in code:
+            return {
+                "error": {
+                    "type": "SECURITY_VIOLATION",
+                    "message": f"Forbidden operation detected: {forbidden}",
+                    "solution": "Remove restricted operations from your code"
+                }
+            }
 
-    # Prepare execution
+    # Prepare execution environment
     local_vars = {'pd': pd}
     stdout_capture = StringIO()
-    suggestions = []
-
-    # Analyze code for common issues
-    if not re.search(r'\.astype$str$', code):
-        suggestions.append("Consider adding .astype(str) for string columns")
-    if not re.search(r'\.str\.strip$$', code):
-        suggestions.append("Consider adding .str.strip() to clean strings")
-    if '\\' in code and not 'r"' in code:
-        suggestions.append("Use raw strings (r\"path\") for Windows paths")
-
-    # Execute
     old_stdout = sys.stdout
     sys.stdout = stdout_capture
     
@@ -127,34 +152,46 @@ def run_pandas_code(code: str) -> dict:
         exec(code, {}, local_vars)
         result = local_vars.get('result', None)
         
-        if result is not None:
+        if result is None:
+            return {
+                "output": stdout_capture.getvalue(),
+                "warning": "No 'result' variable found in code"
+            }
+        
+        # Format different result types appropriately
+        if isinstance(result, (pd.DataFrame, pd.Series)):
+            response = {
+                "result": {
+                    "type": "dataframe" if isinstance(result, pd.DataFrame) else "series",
+                    "shape": result.shape,
+                    "dtypes": str(result.dtypes),
+                    "data": result.head().to_dict() if isinstance(result, pd.DataFrame) else result.to_dict()
+                }
+            }
+        else:
             response = {"result": str(result)}
-            if suggestions:
-                response["suggestions"] = suggestions
-            return response
             
-        return {
-            "error": "No result variable set",
-            "output": stdout_capture.getvalue(),
-            "solution": "Add 'result = ' before your final calculation",
-            "suggestions": suggestions
-        }
+        return response
         
     except Exception as e:
         # Generate specific suggestions based on error
-        error_suggestions = suggestions.copy()
-        if "Cannot compare" in str(e):
-            error_suggestions.append("Convert column types before comparison")
-        if "NoneType" in str(e):
-            error_suggestions.append("Handle null values using .fillna()")
+        error_msg = str(e)
+        suggestions = []
         
+        if "No such file or directory" in error_msg:
+            suggestions.append("Use raw strings for paths: r'path\\to\\file.csv'")
+        if "could not convert string to float" in error_msg:
+            suggestions.append("Try: pd.to_numeric(df['col'], errors='coerce')")
+        if "AttributeError" in error_msg and "str" in error_msg:
+            suggestions.append("Try: df['col'].astype(str).str.strip()")
+            
         return {
             "error": {
                 "type": type(e).__name__,
-                "message": str(e),
+                "message": error_msg,
                 "traceback": traceback.format_exc(),
-                "suggestions": error_suggestions,
-                "output": stdout_capture.getvalue()
+                "output": stdout_capture.getvalue(),
+                "suggestions": suggestions if suggestions else None
             }
         }
     finally:
