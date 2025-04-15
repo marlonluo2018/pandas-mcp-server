@@ -38,10 +38,10 @@ This repository contains a server implementation using the Model Context Protoco
 ```json
 {
   "mcpServers": {
-    "pandas-server": {
+    "pandas": {
       "name": "pandas",
       "type": "stdio",
-      "description": "Run pandas code via MCP protocol",
+      "description": "run pandas code",
       "isActive": true,
       "command": "python",
       "args": [
