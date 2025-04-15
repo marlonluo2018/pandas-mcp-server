@@ -53,4 +53,12 @@ This repository contains a server implementation using the Model Context Protoco
 ```
 2. Use the configured MCP client to interact with the server and utilize the provided tools.
 
+## Workflow
 
+1. Load and inspect your CSV file:
+   - User prompt: "Load the CSV file at data/sample.csv and show me the column structure"
+   - This will call `load_csv_tool` with the file path
+
+2. Execute Pandas operations on the loaded data:
+   - User prompt: "Group the data by category and calculate the sum for each group"
+   - This will call `run_pandas_code` with the appropriate Pandas operation
