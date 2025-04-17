@@ -5,6 +5,12 @@ from chardet import detect
 import traceback
 from io import StringIO
 import sys
+import matplotlib.pyplot as plt
+import seaborn as sns
+import time
+from textwrap import wrap
+import json
+
 
 mcp = FastMCP("PandasAgent")
 
@@ -14,51 +20,50 @@ BLACKLIST = ['os.', 'sys.', 'subprocess.', 'open(', 'exec(', 'eval(', 'import os
 
 @mcp.tool()
 def load_csv_tool(file_path: str) -> dict:
-    """
-    Load CSV file and return metadata in MCP-compatible format
+    """Load CSV file and return metadata in MCP-compatible format.
     
     Args:
         file_path: Absolute path to CSV
         
     Returns:
         dict: Structured metadata including:
-        - columns: List with name/type/sample for each column
-        - file_info: Size and encoding details
-        - status: SUCCESS/ERROR indicator
+            - columns: List with name/type/sample for each column
+            - file_info: Size and encoding details
+            - status: SUCCESS/ERROR indicator
         
     Example:
-    >>> load_csv_tool("/path/to/file.csv")
-    {
-        "status": "SUCCESS",
-        "columns": [
-            {"name": "id", "type": "int64", "sample": [1, 2]},
-            {"name": "name", "type": "object", "sample": ["Alice", "Bob"]}
-        ],
-        "file_info": {
-            "size": "45.3KB",
-            "encoding": "utf-8"
+        >>> load_csv_tool("/path/to/file.csv")
+        {
+            "status": "SUCCESS",
+            "columns": [
+                {"name": "id", "type": "int64", "sample": [1, 2]},
+                {"name": "name", "type": "object", "sample": ["Alice", "Bob"]}
+            ],
+            "file_info": {
+                "size": "45.3KB",
+                "encoding": "utf-8"
+            }
         }
-    }
     """
     try:
         # Validate file existence and size
         if not os.path.exists(file_path):
             return {"status": "ERROR", "error": "FILE_NOT_FOUND", "path": file_path}
-            
+
         file_size = os.path.getsize(file_path)
         if file_size > MAX_FILE_SIZE:
             return {
                 "status": "ERROR",
                 "error": "FILE_TOO_LARGE",
-                "max_size": f"{MAX_FILE_SIZE/1024/1024}MB",
-                "actual_size": f"{file_size/1024/1024:.1f}MB"
+                "max_size": f"{MAX_FILE_SIZE / 1024 / 1024}MB",
+                "actual_size": f"{file_size / 1024 / 1024:.1f}MB"
             }
 
         # Detect encoding and delimiter
         with open(file_path, 'rb') as f:
             rawdata = f.read(50000)
             enc = detect(rawdata)['encoding'] or 'utf-8'
-            
+
         with open(file_path, 'r', encoding=enc) as f:
             first_line = f.readline()
             delimiter = ',' if ',' in first_line else '\t' if '\t' in first_line else ';'
@@ -68,8 +73,8 @@ def load_csv_tool(file_path: str) -> dict:
             return {
                 "status": "ERROR",
                 "error": "FILE_TOO_LARGE",
-                "max_size": f"{MAX_FILE_SIZE/1024/1024}MB",
-                "actual_size": f"{file_size/1024/1024:.1f}MB"
+                "max_size": f"{MAX_FILE_SIZE / 1024 / 1024}MB",
+                "actual_size": f"{file_size / 1024 / 1024:.1f}MB"
             }
         else:
             df = pd.read_csv(file_path, encoding=enc, delimiter=delimiter, nrows=100)
@@ -86,7 +91,7 @@ def load_csv_tool(file_path: str) -> dict:
                 for col in df.columns
             ],
             "file_info": {
-                "size": f"{file_size/1024:.1f}KB",
+                "size": f"{file_size / 1024:.1f}KB",
                 "encoding": enc,
                 "delimiter": delimiter
             }
@@ -105,32 +110,53 @@ def load_csv_tool(file_path: str) -> dict:
             "traceback": traceback.format_exc()
         }
 
+
 @mcp.tool()
-def run_pandas_code(code: str) -> dict:
-    """
-    Execute pandas code with smart suggestions and security checks
+def run_pandas_code(code: str, file_path: str) -> dict:
+    """Execute pandas code with smart suggestions and security checks.
     
     Requirements:
-    - Must contain full import and file loading logic
-    - Must assign final result to 'result' variable
+        - Must contain full import and file loading logic using the provided file_path
+        - Must assign final result to 'result' variable
+        - Code must use the provided file_path to load data
     
     Returns:
         dict: Either the result or error information
         
     Example:
-    >>> run_pandas_code('''
-    ... import pandas as pd
-    ... df = pd.DataFrame({'A': [1,2], 'B': [3,4]})
-    ... result = df.sum()
-    ... ''')
-    {
-        "result": {
-            "type": "series",
-            "data": {"A": 3, "B": 7},
-            "dtype": "int64"
+        >>> run_pandas_code('''
+        ... import pandas as pd
+        ... df = pd.read_csv(file_path)
+        ... result = df.sum()
+        ... ''', '/path/to/data.csv')
+        {
+            "result": {
+                "type": "series",
+                "data": {"A": 3, "B": 7},
+                "dtype": "int64"
+            }
         }
-    }
     """
+    # Validate file
+    if not os.path.exists(file_path):
+        return {
+            "error": {
+                "type": "FILE_ERROR",
+                "message": f"File not found: {file_path}",
+                "solution": "Check the file path and try again"
+            }
+        }
+
+    file_size = os.path.getsize(file_path)
+    if file_size > MAX_FILE_SIZE:
+        return {
+            "error": {
+                "type": "FILE_ERROR",
+                "message": f"File too large: {file_size / 1024 / 1024:.1f}MB (max {MAX_FILE_SIZE / 1024 / 1024}MB)",
+                "solution": "Use a smaller file or increase MAX_FILE_SIZE"
+            }
+        }
+
     # Security checks
     for forbidden in BLACKLIST:
         if forbidden in code:
@@ -142,22 +168,32 @@ def run_pandas_code(code: str) -> dict:
                 }
             }
 
+    # Verify code uses the provided file_path
+    if f"'{file_path}'" not in code and f'"{file_path}"' not in code:
+        return {
+            "error": {
+                "type": "CODE_VALIDATION",
+                "message": "Code must use the provided file_path to load data",
+                "solution": f"Add a file loading statement using '{file_path}'"
+            }
+        }
+
     # Prepare execution environment
     local_vars = {'pd': pd}
     stdout_capture = StringIO()
     old_stdout = sys.stdout
     sys.stdout = stdout_capture
-    
+
     try:
         exec(code, {}, local_vars)
         result = local_vars.get('result', None)
-        
+
         if result is None:
             return {
                 "output": stdout_capture.getvalue(),
                 "warning": "No 'result' variable found in code"
             }
-        
+
         # Format different result types appropriately
         if isinstance(result, (pd.DataFrame, pd.Series)):
             response = {
@@ -170,21 +206,21 @@ def run_pandas_code(code: str) -> dict:
             }
         else:
             response = {"result": str(result)}
-            
+
         return response
         
     except Exception as e:
         # Generate specific suggestions based on error
         error_msg = str(e)
         suggestions = []
-        
+
         if "No such file or directory" in error_msg:
             suggestions.append("Use raw strings for paths: r'path\\to\\file.csv'")
         if "could not convert string to float" in error_msg:
             suggestions.append("Try: pd.to_numeric(df['col'], errors='coerce')")
         if "AttributeError" in error_msg and "str" in error_msg:
             suggestions.append("Try: df['col'].astype(str).str.strip()")
-            
+
         return {
             "error": {
                 "type": type(e).__name__,
@@ -196,6 +232,111 @@ def run_pandas_code(code: str) -> dict:
         }
     finally:
         sys.stdout = old_stdout
+
+
+
+@mcp.tool()
+def bar_chart_to_html(
+    categories: list,
+    values: list,
+    title: str = "Interactive Chart",
+   
+) -> dict:
+    """Generate interactive HTML bar chart using Chart.js template.
+    
+    Args:
+        categories: List of category names for x-axis
+        values: List of numeric values for y-axis
+        title: Chart title (default: "Interactive Chart")
+        x_label: Label for X-axis (default: "Categories")
+        y_label: Label for Y-axis (default: "Values")
+        
+    Returns:
+        dict: Contains file path and status information
+        
+    Example:
+        >>> bar_chart_to_html(
+        ...     categories=['Electronics', 'Clothing', 'Home Goods', 'Sports Equipment'],
+        ...     values=[120000, 85000, 95000, 60000],
+        ...     title="Q1 Sales by Product Category"
+        ... )
+        {
+            "status": "SUCCESS",
+            "filepath": "/absolute/path/to/plotXXXXXX.html",
+        }
+    """
+    # Validate input lengths
+    if len(categories) != len(values):
+        return {
+            "status": "ERROR",
+            "error": "MISMATCHED_LENGTHS",
+            "message": f"Categories ({len(categories)}) and values ({len(values)}) must be same length"
+        }
+
+    # Read template file
+    template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "./templates/barchart_template.html")
+    try:
+        with open(template_path, 'r', encoding='utf-8') as f:
+            template = f.read()
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "error": "TEMPLATE_READ_ERROR",
+            "message": str(e)
+        }
+
+    # Prepare data for Chart.js
+    all_categories = categories
+    all_values = values
+    colors = [
+        "#4e73df", "#1cc88a", "#36b9cc", "#f6c23e",
+        "#e74a3b", "#858796", "#f8f9fc", "#5a5c69",
+        "#6610f2", "#6f42c1", "#e83e8c", "#d63384",
+        "#fd7e14", "#ffc107", "#28a745", "#20c997",
+        "#17a2b8", "#007bff", "#6c757d", "#343a40",
+        "#dc3545", "#ff6b6b", "#4ecdc4", "#1a535c"
+    ][:len(all_categories)]
+
+    # Inject data into template
+    template = template.replace(
+        'labels: ["Electronics", "Clothing", "Home Goods", "Sports Equipment"]',
+        f'labels: {json.dumps(all_categories)}'
+    ).replace(
+        'data: [120000, 85000, 95000, 60000]',
+        f'data: {json.dumps(all_values)}'
+    ).replace(
+        'backgroundColor: ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e"]',
+        f'backgroundColor: {json.dumps(colors)}'
+    ).replace(
+        'Sales by Category (2023)',
+        title
+    ).replace(
+        'legend: { position: \'top\' },',
+        ''
+    )
+
+    # Save to plot directory as HTML
+    plots_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+
+    timestamp = str(int(time.time()))
+    filename = f"plot_{timestamp}.html"
+    filepath = os.path.join(plots_dir, filename)
+
+    try:
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(template)
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "error": "FILE_WRITE_ERROR",
+            "message": str(e)
+        }
+
+    return {
+        "status": "SUCCESS",
+        "filepath": os.path.abspath(filepath)
+    }
 
 
 if __name__ == "__main__":
