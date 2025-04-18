@@ -31,7 +31,7 @@ def read_metadata(file_path: str) -> dict:
             - status: SUCCESS/ERROR indicator
         
     Example:
-        >>> load_csv_tool("/path/to/file.csv")
+        >>> read_metadata("/path/to/file.csv")
         {
             "status": "SUCCESS",
             "columns": [
