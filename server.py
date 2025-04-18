@@ -5,7 +5,6 @@ from chardet import detect
 import traceback
 from io import StringIO
 import sys
-import matplotlib.pyplot as plt
 import seaborn as sns
 import time
 from textwrap import wrap
@@ -313,6 +312,102 @@ def bar_chart_to_html(
     ).replace(
         'legend: { position: \'top\' },',
         ''
+    )
+
+    # Save to plot directory as HTML
+    plots_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+
+    timestamp = str(int(time.time()))
+    filename = f"plot_{timestamp}.html"
+    filepath = os.path.join(plots_dir, filename)
+
+    try:
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(template)
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "error": "FILE_WRITE_ERROR",
+            "message": str(e)
+        }
+
+    return {
+        "status": "SUCCESS",
+        "filepath": os.path.abspath(filepath)
+    }
+
+
+@mcp.tool()
+def pie_chart_to_html(
+    labels: list,
+    values: list,
+    title: str = "Interactive Pie Chart"
+) -> dict:
+    """Generate interactive HTML pie chart using Chart.js template.
+    
+    Args:
+        labels: List of label names for each pie slice
+        values: List of numeric values for each slice
+        title: Chart title (default: "Interactive Pie Chart")
+        
+    Returns:
+        dict: Contains file path and status information
+        
+    Example:
+        >>> pie_chart_to_html(
+        ...     labels=['Electronics', 'Clothing', 'Home Goods'],
+        ...     values=[120000, 85000, 95000],
+        ...     title="Q1 Sales Distribution"
+        ... )
+        {
+            "status": "SUCCESS",
+            "filepath": "/absolute/path/to/plotXXXXXX.html",
+        }
+    """
+    # Validate input lengths
+    if len(labels) != len(values):
+        return {
+            "status": "ERROR",
+            "error": "MISMATCHED_LENGTHS",
+            "message": f"Labels ({len(labels)}) and values ({len(values)}) must be same length"
+        }
+
+    # Read template file
+    template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "./templates/piechart_template.html")
+    try:
+        with open(template_path, 'r', encoding='utf-8') as f:
+            template = f.read()
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "error": "TEMPLATE_READ_ERROR",
+            "message": str(e)
+        }
+
+    # Prepare data for Chart.js
+    colors = [
+        "#4e73df", "#1cc88a", "#36b9cc", "#f6c23e",
+        "#e74a3b", "#858796", "#f8f9fc", "#5a5c69",
+        "#6610f2", "#6f42c1", "#e83e8c", "#d63384",
+        "#fd7e14", "#ffc107", "#28a745", "#20c997",
+        "#17a2b8", "#007bff", "#6c757d", "#343a40",
+        "#dc3545", "#ff6b6b", "#4ecdc4", "#1a535c"
+    ][:len(labels)]
+
+    # Inject data into template
+    template = template.replace(
+        'labels: ["Apple", "Samsung", "Huawei", "Xiaomi", "Others"]',
+        f'labels: {json.dumps(labels)}'
+    ).replace(
+        'data: [45, 25, 12, 8, 10]',
+        f'data: {json.dumps(values)}'
+    ).replace(
+        'backgroundColor: ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b"]',
+        f'backgroundColor: {json.dumps(colors)}'
+    ).replace(
+        'Global Smartphone Market Share (2023)',
+        title
     )
 
     # Save to plot directory as HTML

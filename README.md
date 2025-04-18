@@ -1,6 +1,6 @@
 # Pandas MCP Server
 
-This repository contains a server implementation using the Model Context Protocol (MCP) with functionalities to handle CSV files and execute Pandas code.
+This repository contains a server implementation using the Model Context Protocol (MCP) with functionalities to handle CSV files, execute Pandas code, and generate interactive charts (bar charts and pie charts).
 
 ## Requirements
 
@@ -31,6 +31,42 @@ This repository contains a server implementation using the Model Context Protoco
 - **Security Notes**:
   - Prevents execution of blacklisted operations such as `os.`, `sys.`, `subprocess.`, `open(`, `exec(`, `eval(`, `import os`, `import sys`.
   - Provides detailed error messages and suggestions to help users resolve issues.
+
+### bar_chart_to_html
+
+- **Description**: Generates an interactive HTML bar chart using Chart.js template.
+- **Parameters**:
+  - `categories`: List of category names for x-axis
+  - `values`: List of numeric values for y-axis
+  - `title`: Chart title (default: "Interactive Chart")
+- **Returns**:
+  - A dictionary containing the file path and status information
+- **Example**:
+```python
+bar_chart_to_html(
+    categories=['Electronics', 'Clothing', 'Home Goods'],
+    values=[120000, 85000, 95000],
+    title="Q1 Sales by Product Category"
+)
+```
+
+### pie_chart_to_html
+
+- **Description**: Generates an interactive HTML pie chart using Chart.js template.
+- **Parameters**:
+  - `labels`: List of label names for each pie slice
+  - `values`: List of numeric values for each slice
+  - `title`: Chart title (default: "Interactive Pie Chart")
+- **Returns**:
+  - A dictionary containing the file path and status information
+- **Example**:
+```python
+pie_chart_to_html(
+    labels=['Electronics', 'Clothing', 'Home Goods'],
+    values=[120000, 85000, 95000],
+    title="Q1 Sales Distribution"
+)
+```
 
 ## Usage
 
