@@ -315,12 +315,12 @@ def bar_chart_to_html(
     )
 
     # Save to plot directory as HTML
-    plots_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plots")
-    os.makedirs(plots_dir, exist_ok=True)
+    charts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "charts")
+    os.makedirs(charts_dir, exist_ok=True)
 
     timestamp = str(int(time.time()))
-    filename = f"plot_{timestamp}.html"
-    filepath = os.path.join(plots_dir, filename)
+    filename = f"chart_{timestamp}.html"
+    filepath = os.path.join(charts_dir, filename)
 
     try:
         with open(filepath, 'w', encoding='utf-8') as f:
@@ -411,12 +411,152 @@ def pie_chart_to_html(
     )
 
     # Save to plot directory as HTML
-    plots_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plots")
-    os.makedirs(plots_dir, exist_ok=True)
+    charts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "charts")
+    os.makedirs(charts_dir, exist_ok=True)
 
     timestamp = str(int(time.time()))
-    filename = f"plot_{timestamp}.html"
-    filepath = os.path.join(plots_dir, filename)
+    filename = f"chart_{timestamp}.html"
+    filepath = os.path.join(charts_dir, filename)
+
+    try:
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(template)
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "error": "FILE_WRITE_ERROR",
+            "message": str(e)
+        }
+
+    return {
+        "status": "SUCCESS",
+        "filepath": os.path.abspath(filepath)
+    }
+
+@mcp.tool()
+def line_chart_to_html(
+    labels: list,
+    datasets: list,
+    title: str = "Interactive Line Chart"
+) -> dict:
+    """Generate interactive HTML line chart using Chart.js template.
+    
+    Args:
+        labels: List of label names for x-axis
+        datasets: List of datasets, each containing:
+            - label: Name of the dataset
+            - data: List of numeric values (3 dimensions: [x, y, z])
+        title: Chart title (default: "Interactive Line Chart")
+        
+    Returns:
+        dict: Contains file path and status information
+        
+    Example:
+        >>> line_chart_to_html(
+        ...     labels=['Jan', 'Feb', 'Mar'],
+        ...     datasets=[
+        ...         {'label': 'Sales', 'data': [[100, 200, 300], [150, 250, 350], [200, 300, 400]]},
+        ...         {'label': 'Expenses', 'data': [[50, 100, 150], [75, 125, 175], [100, 150, 200]]}
+        ...     ],
+        ...     title="Monthly Performance"
+        ... )
+        {
+            "status": "SUCCESS",
+            "filepath": "/absolute/path/to/plotXXXXXX.html",
+        }
+    """
+    # Validate input
+    if not all(len(d['data']) == len(labels) for d in datasets):
+        return {
+            "status": "ERROR",
+            "error": "MISMATCHED_LENGTHS",
+            "message": "All datasets must have same length as labels"
+        }
+
+    # Read template file
+    template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "./templates/linechart_template.html")
+    try:
+        with open(template_path, 'r', encoding='utf-8') as f:
+            template = f.read()
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "error": "TEMPLATE_READ_ERROR",
+            "message": str(e)
+        }
+
+    # Prepare data for Chart.js
+    chart_data = {
+        "labels": labels,
+        "datasets": []
+    }
+    
+    # Create datasets using main labels
+    for dataset in datasets:
+            chart_data['datasets'].append({
+                "label": dataset['label'],
+                "data": dataset['data'],
+                "borderColor": '#4e73df',  # Default color
+                "backgroundColor": '#4e73df',
+            "borderWidth": 2,
+            "pointRadius": 5,
+            "tension": 0,
+            "fill": False
+        })
+
+    # Inject data into template
+    template = template.replace(
+        'labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]',
+        f'labels: {json.dumps(labels)}'
+    ).replace(
+        'datasets: [\n' +
+        '                {\n' +
+        '                    label: "Electronics",\n' +
+        '                    data: [6500, 5900, 8000, 8100, 8600, 8250, 9500, 10500, 12000, 11500, 13000, 15000],\n' +
+        '                    borderColor: "#4e73df",\n' +
+        '                    backgroundColor: "#4e73df",\n' +
+        '                    borderWidth: 2,\n' +
+        '                    pointRadius: 5,\n' +
+        '                    tension: 0,\n' +
+        '                    fill: false\n' +
+        '                },\n' +
+        '                {\n' +
+        '                    label: "Clothing",\n' +
+        '                    data: [12000, 11000, 12500, 10500, 11500, 13000, 14000, 12500, 11000, 9500, 10000, 12000],\n' +
+        '                    borderColor: "#1cc88a",\n' +
+        '                    backgroundColor: "#1cc88a",\n' +
+        '                    borderWidth: 2,\n' +
+        '                    pointRadius: 5,\n' +
+        '                    tension: 0,\n' +
+        '                    fill: false\n' +
+        '                },\n' +
+        '                {\n' +
+        '                    label: "Home Goods",\n' +
+        '                    data: [8000, 8500, 9000, 9500, 10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500],\n' +
+        '                    borderColor: "#36b9cc",\n' +
+        '                    backgroundColor: "#36b9cc",\n' +
+        '                    borderWidth: 2,\n' +
+        '                    pointRadius: 5,\n' +
+        '                    tension: 0,\n' +
+        '                    fill: false\n' +
+        '                }\n' +
+        '            ]',
+        f'datasets: {json.dumps(chart_data["datasets"], indent=16)}'
+    ).replace(
+        'Interactive Sales Trend Dashboard',
+        title
+    ).replace(
+        'Monthly Sales Trend (2023)',
+        title
+    )
+
+    # Save to plot directory as HTML
+    charts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "charts")
+    os.makedirs(charts_dir, exist_ok=True)
+
+    timestamp = str(int(time.time()))
+    filename = f"chart_{timestamp}.html"
+    filepath = os.path.join(charts_dir, filename)
 
     try:
         with open(filepath, 'w', encoding='utf-8') as f:

@@ -95,7 +95,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Interactive Sales Trend Dashboard</h1>
+        <h1>Test Line Chart</h1>
         
         <!-- Control Panel -->
         <div class="controls">
@@ -150,39 +150,35 @@
     <script>
         // Initial data
         const data = {
-            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            labels: ["Jan", "Feb", "Mar"],
             datasets: [
                 {
-                    label: "Electronics",
-                    data: [6500, 5900, 8000, 8100, 8600, 8250, 9500, 10500, 12000, 11500, 13000, 15000],
-                    borderColor: "#4e73df",
-                    backgroundColor: "#4e73df",
-                    borderWidth: 2,
-                    pointRadius: 5,
-                    tension: 0,
-                    fill: false
-                },
-                {
-                    label: "Clothing",
-                    data: [12000, 11000, 12500, 10500, 11500, 13000, 14000, 12500, 11000, 9500, 10000, 12000],
-                    borderColor: "#1cc88a",
-                    backgroundColor: "#1cc88a",
-                    borderWidth: 2,
-                    pointRadius: 5,
-                    tension: 0,
-                    fill: false
-                },
-                {
-                    label: "Home Goods",
-                    data: [8000, 8500, 9000, 9500, 10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500],
-                    borderColor: "#36b9cc",
-                    backgroundColor: "#36b9cc",
-                    borderWidth: 2,
-                    pointRadius: 5,
-                    tension: 0,
-                    fill: false
+                                "label": "Sales",
+                                "data": [
+                                                [
+                                                                100,
+                                                                200,
+                                                                300
+                                                ],
+                                                [
+                                                                150,
+                                                                250,
+                                                                350
+                                                ],
+                                                [
+                                                                200,
+                                                                300,
+                                                                400
+                                                ]
+                                ],
+                                "borderColor": "#4e73df",
+                                "backgroundColor": "#4e73df",
+                                "borderWidth": 2,
+                                "pointRadius": 5,
+                                "tension": 0,
+                                "fill": false
                 }
-            ]
+]
         };
 
         // Create chart
@@ -205,7 +201,7 @@
                         },
                         title: { 
                             display: true,
-                            text: 'Monthly Sales Trend (2023)',
+                            text: 'Test Line Chart',
                             font: { size: 16 }
                         },
                         datalabels: {

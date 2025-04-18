@@ -42,12 +42,12 @@ This repository contains a server implementation using the Model Context Protoco
 - **Returns**:
   - A dictionary containing the file path and status information
 - **Example**:
-```python
-bar_chart_to_html(
-    categories=['Electronics', 'Clothing', 'Home Goods'],
-    values=[120000, 85000, 95000],
-    title="Q1 Sales by Product Category"
-)
+```json
+{
+    "categories": ["Electronics", "Clothing", "Home Goods"],
+    "values": [120000, 85000, 95000],
+    "title": "Q1 Sales by Product Category"
+}
 ```
 
 ### pie_chart_to_html
@@ -60,12 +60,41 @@ bar_chart_to_html(
 - **Returns**:
   - A dictionary containing the file path and status information
 - **Example**:
-```python
-pie_chart_to_html(
-    labels=['Electronics', 'Clothing', 'Home Goods'],
-    values=[120000, 85000, 95000],
-    title="Q1 Sales Distribution"
-)
+```json
+{
+    "labels": ["Electronics", "Clothing", "Home Goods"],
+    "values": [120000, 85000, 95000],
+    "title": "Q1 Sales Distribution"
+}
+```
+
+### line_chart_to_html
+
+- **Description**: Generates an interactive HTML line chart using Chart.js template.
+- **Parameters**:
+  - `labels`: List of label names for x-axis
+    - `datasets`: List of datasets, each containing:
+      - `label`: Name of the dataset
+      - `data`: List of numeric values
+  - `title`: Chart title (default: "Interactive Line Chart")
+- **Returns**:
+  - A dictionary containing the file path and status information
+- **Example**:
+```json
+{
+    "labels": ["Jan", "Feb", "Mar"],
+    "datasets": [
+        {
+            "label": "Sales",
+            "data": [12000, 15000, 18000]
+        },
+        {
+            "label": "Expenses",
+            "data": [8000, 9000, 10000]
+        }
+    ],
+    "title": "Monthly Performance"
+}
 ```
 
 ## Usage
