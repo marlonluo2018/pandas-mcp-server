@@ -266,7 +266,7 @@
                             formatter: (value, context) => {
                                 const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                                 const percentage = Math.round((value / total) * 100);
-                                return showPercentage ? `${percentage}%` : `${value}M`;
+    return showPercentage ? `${percentage}%` : `${value}`;
                             },
                             color: '#fff',
                             font: { 

@@ -111,7 +111,7 @@ def load_csv_tool(file_path: str) -> dict:
 
 
 @mcp.tool()
-def run_pandas_code(code: str, file_path: str) -> dict:
+def run_pandas_code(code: str) -> dict:
     """Execute pandas code with smart suggestions and security checks.
     
     Requirements:
@@ -136,25 +136,7 @@ def run_pandas_code(code: str, file_path: str) -> dict:
             }
         }
     """
-    # Validate file
-    if not os.path.exists(file_path):
-        return {
-            "error": {
-                "type": "FILE_ERROR",
-                "message": f"File not found: {file_path}",
-                "solution": "Check the file path and try again"
-            }
-        }
-
-    file_size = os.path.getsize(file_path)
-    if file_size > MAX_FILE_SIZE:
-        return {
-            "error": {
-                "type": "FILE_ERROR",
-                "message": f"File too large: {file_size / 1024 / 1024:.1f}MB (max {MAX_FILE_SIZE / 1024 / 1024}MB)",
-                "solution": "Use a smaller file or increase MAX_FILE_SIZE"
-            }
-        }
+    
 
     # Security checks
     for forbidden in BLACKLIST:
@@ -167,16 +149,7 @@ def run_pandas_code(code: str, file_path: str) -> dict:
                 }
             }
 
-    # Verify code uses the provided file_path
-    if f"'{file_path}'" not in code and f'"{file_path}"' not in code:
-        return {
-            "error": {
-                "type": "CODE_VALIDATION",
-                "message": "Code must use the provided file_path to load data",
-                "solution": f"Add a file loading statement using '{file_path}'"
-            }
-        }
-
+   
     # Prepare execution environment
     local_vars = {'pd': pd}
     stdout_capture = StringIO()

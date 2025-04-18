@@ -24,7 +24,6 @@ This repository contains a server implementation using the Model Context Protoco
 
 - **Description**: Executes Pandas code provided as a string.
 - **Parameters**:
-  - `file_path`: Path to the CSV file to be loaded into a DataFrame.
   - `code`: String containing the Pandas code to execute.
 - **Returns**:
   - A dictionary containing the result of the executed code and any variables created during execution.

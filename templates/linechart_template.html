@@ -100,6 +100,12 @@
         <!-- Control Panel -->
         <div class="controls">
             <div class="control-group">
+                <label>Y-Axis Start:</label>
+                <input type="number" id="yAxisMin" min="0" max="50000" step="5000" value="0">
+                <span id="yAxisMinValue" class="value-display">0</span>
+            </div>
+            
+            <div class="control-group">
                 <label>Line Width:</label>
                 <input type="range" id="lineWidth" min="1" max="5" step="1" value="2">
                 <span id="lineWidthValue" class="value-display">2</span>
@@ -109,12 +115,6 @@
                 <label>Point Size:</label>
                 <input type="range" id="pointSize" min="0" max="10" step="1" value="5">
                 <span id="pointSizeValue" class="value-display">5</span>
-            </div>
-            
-            <div class="control-group">
-                <label>Y-Axis Min:</label>
-                <input type="range" id="yAxisMin" min="0" max="50000" step="5000" value="0">
-                <span id="yAxisMinValue" class="value-display">0</span>
             </div>
             
             <div class="control-group">
@@ -248,15 +248,21 @@
             yAxisMinControl.disabled = false;
         }
 
-        // Interaction controls
-        document.getElementById('lineWidth').addEventListener('input', function() {
-            const value = parseInt(this.value);
-            document.getElementById('lineWidthValue').textContent = value;
-            myChart.data.datasets.forEach(dataset => {
-                dataset.borderWidth = value;
+        // Add error handling for chart initialization
+        try {
+            // Interaction controls
+            document.getElementById('lineWidth').addEventListener('input', function() {
+                const value = parseInt(this.value);
+                document.getElementById('lineWidthValue').textContent = value;
+                myChart.data.datasets.forEach(dataset => {
+                    dataset.borderWidth = value;
+                });
+                myChart.update();
             });
-            myChart.update();
-        });
+        } catch (error) {
+            console.error('Chart initialization error:', error);
+            alert('Error initializing chart. Please check the console for details.');
+        }
 
         document.getElementById('pointSize').addEventListener('input', function() {
             const value = parseInt(this.value);
