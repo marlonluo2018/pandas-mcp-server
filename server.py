@@ -18,8 +18,8 @@ MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
 BLACKLIST = ['os.', 'sys.', 'subprocess.', 'open(', 'exec(', 'eval(', 'import os', 'import sys']
 
 @mcp.tool()
-def load_csv_tool(file_path: str) -> dict:
-    """Load CSV file and return metadata in MCP-compatible format.
+def read_metadata(file_path: str) -> dict:
+    """Read CSV file metadata and return in MCP-compatible format.
     
     Args:
         file_path: Absolute path to CSV
@@ -78,23 +78,105 @@ def load_csv_tool(file_path: str) -> dict:
         else:
             df = pd.read_csv(file_path, encoding=enc, delimiter=delimiter, nrows=100)
 
-        # Format response
-        return {
+        # Calculate additional metadata
+        columns_metadata = []
+        for col in df.columns:
+            col_meta = {
+                "name": col,
+                "type": str(df[col].dtype),
+                "sample": df[col].dropna().iloc[:2].tolist(),
+                "stats": {
+                    "null_count": df[col].isnull().sum(),
+                    "unique_count": df[col].nunique(),
+                    "is_numeric": pd.api.types.is_numeric_dtype(df[col])
+                },
+                "warnings": [],
+                "suggested_operations": []
+            }
+            
+            # Add numeric stats if applicable
+            if pd.api.types.is_numeric_dtype(df[col]):
+                col_meta["stats"].update({
+                    "min": df[col].min(),
+                    "max": df[col].max(),
+                    "mean": df[col].mean(),
+                    "std": df[col].std()
+                })
+                col_meta["suggested_operations"].extend([
+                    "normalize", "scale", "log_transform"
+                ])
+            
+            # Add categorical stats if applicable
+            if pd.api.types.is_string_dtype(df[col]):
+                col_meta["suggested_operations"].extend([
+                    "one_hot_encode", "label_encode", "text_processing"
+                ])
+            
+            # Add datetime detection
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                col_meta["suggested_operations"].extend([
+                    "extract_year", "extract_month", "time_delta"
+                ])
+            
+            # Add warnings
+            if df[col].isnull().sum() > 0:
+                col_meta["warnings"].append(f"{df[col].isnull().sum()} null values found")
+            if df[col].nunique() == 1:
+                col_meta["warnings"].append("Column contains only one unique value")
+            if pd.api.types.is_numeric_dtype(df[col]) and df[col].abs().max() > 1e6:
+                col_meta["warnings"].append("Large numeric values detected - consider scaling")
+            
+            columns_metadata.append(col_meta)
+
+        from pandas.api.types import infer_dtype
+        
+        # Format concise response
+        summary = {
             "status": "SUCCESS",
-            "columns": [
-                {
-                    "name": col,
-                    "type": str(df[col].dtype),
-                    "sample": df[col].dropna().iloc[:2].tolist()
-                }
-                for col in df.columns
-            ],
             "file_info": {
                 "size": f"{file_size / 1024:.1f}KB",
                 "encoding": enc,
                 "delimiter": delimiter
+            },
+            "dataset": {
+                "rows": len(df),
+                "columns": len(df.columns),
+                "column_types": {
+                    col: infer_dtype(df[col])
+                    for col in df.columns
+                }
+            },
+            "warnings": {
+                "message": "Data quality issues detected" if (
+                    df.isnull().any().any() or 
+                    df.duplicated().any() or
+                    (df.nunique() == 1).any()
+                ) else "No significant data quality issues found",
+                **({
+                    "null_columns": {
+                        "count": sum(df.isnull().any()),
+                        "columns": [col for col in df.columns if df[col].isnull().any()]
+                    }
+                } if sum(df.isnull().any()) > 0 else {}),
+                **({
+                    "total_nulls": df.isnull().sum().sum()
+                } if df.isnull().sum().sum() > 0 else {}),
+                **({
+                    "duplicate_rows": {
+                        "count": df.duplicated().sum(),
+                        "rows": df[df.duplicated()].index.tolist()
+                    }
+                } if df.duplicated().sum() > 0 else {}),
+                **({
+                    "single_value_columns": {
+                        "count": sum(df.nunique() == 1),
+                        "columns": [col for col in df.columns if df[col].nunique() == 1]
+                    }
+                } if sum(df.nunique() == 1) > 0 else {})
             }
         }
+            
+        return summary
 
     except Exception as e:
         return {

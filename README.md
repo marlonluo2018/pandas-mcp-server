@@ -9,7 +9,7 @@ This repository contains a server implementation using the Model Context Protoco
 
 ## Functions
 
-### load_csv_tool
+### read_metadata
 
 - **Description**: Loads a CSV file and returns its column structure and sample data.
 - **Parameters**:
@@ -119,10 +119,21 @@ This repository contains a server implementation using the Model Context Protoco
 
 ## Workflow
 
-1. Load and inspect your CSV file:
-   - User prompt: "Load the CSV file at data/sample.csv and show me the column structure"
-   - This will call `load_csv_tool` with the file path
+1. Read metadata of your CSV file:
+   - User prompt: "Read metadata of data/sample.csv and show me the column structure"
+   - This will call `read_metadata` with the file path
 
 2. Execute Pandas operations on the loaded data:
    - User prompt: "Group the data by category and calculate the sum for each group"
    - This will call `run_pandas_code` with the appropriate Pandas operation
+
+3. Visualize the results using charts:
+   - User prompt: "Create a bar chart showing sales by category"
+   - This will call `bar_chart_to_html` with the grouped data
+   - Example response:
+```json
+{
+    "status": "SUCCESS",
+    "filepath": "/absolute/path/to/chart_1713443200.html"
+}
+```
