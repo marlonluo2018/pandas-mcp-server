@@ -1,0 +1,233 @@
+import os
+import traceback
+import pandas as pd
+from chardet import detect
+from config import MAX_FILE_SIZE
+from data_types import get_descriptive_type
+
+def read_metadata(file_path: str) -> dict:
+    """Read file metadata (Excel or CSV) and return in MCP-compatible format.
+    
+    Args:
+        file_path: Absolute path to data file
+        
+    Returns:
+        dict: Structured metadata including:
+            For Excel:
+                - file_info: {type: "excel", sheet_count, sheet_names}
+                - data: {sheets: [{sheet_name, rows, columns}]}
+            For CSV:
+                - file_info: {type: "csv", encoding, delimiter}
+                - data: {rows, columns}
+            Common:
+                - status: SUCCESS/ERROR
+                - columns contain:
+                    - name, type, examples
+                    - stats: null_count, unique_count
+                    - warnings, suggested_operations
+    """
+    try:
+        # Validate file existence and size
+        if not os.path.exists(file_path):
+            return {"status": "ERROR", "error": "FILE_NOT_FOUND", "path": file_path}
+
+        file_size = os.path.getsize(file_path)
+        if file_size > MAX_FILE_SIZE:
+            return {
+                "status": "ERROR",
+                "error": "FILE_TOO_LARGE",
+                "max_size": f"{MAX_FILE_SIZE / 1024 / 1024}MB",
+                "actual_size": f"{file_size / 1024 / 1024:.1f}MB"
+            }
+
+        # Detect file type
+        file_ext = os.path.splitext(file_path)[1].lower()
+        
+        if file_ext == '.csv':
+            # Read CSV file
+            with open(file_path, 'rb') as f:
+                raw_data = f.read()
+                encoding = detect(raw_data)['encoding']
+            
+            df = pd.read_csv(file_path, encoding=encoding, nrows=100)
+            table_meta = process_sheet(df)
+            
+            return {
+                "status": "SUCCESS",
+                "file_info": {
+                    "type": "csv",
+                    "size": f"{file_size / 1024:.1f}KB",
+                    "encoding": encoding,
+                    "delimiter": ","
+                },
+                "data": {
+                    "rows": table_meta['rows'],
+                    "columns": [
+                        {
+                            "name": col['name'],
+                            "type": col['type'],
+                            "examples": col['examples'],
+                            "stats": {
+                                "null_count": col['stats']['null_count'],
+                                "unique_count": col['stats']['unique_count']
+                            }
+                        }
+                        for col in table_meta['columns']
+                    ]
+                }
+            }
+        else:
+            # Read Excel file
+            excel_file = pd.ExcelFile(file_path)
+            sheets_metadata = []
+            
+            for sheet_name in excel_file.sheet_names:
+                df = excel_file.parse(sheet_name, nrows=100)
+                sheet_meta = process_sheet(df)
+                sheet_meta['sheet_name'] = sheet_name
+                sheets_metadata.append(sheet_meta)
+            
+            # Excel file response
+            return {
+                "status": "SUCCESS",
+                "file_info": {
+                    "type": "excel",
+                    "size": f"{file_size / 1024:.1f}KB",
+                    "sheet_count": len(sheets_metadata),
+                    "sheet_names": [s['sheet_name'] for s in sheets_metadata]
+                },
+                "data": {
+                    "sheets": [
+                        {
+                            "name": sheet['sheet_name'],
+                            "rows": sheet['rows'],
+                            "columns": [
+                                {
+                                    "name": col['name'],
+                                    "type": col['type'],
+                                    "examples": col['examples'],
+                                    "stats": {
+                                        "null_count": col['stats']['null_count'],
+                                        "unique_count": col['stats']['unique_count']
+                                    }
+                                }
+                                for col in sheet['columns']
+                            ]
+                        }
+                        for sheet in sheets_metadata
+                    ]
+                }
+            }
+            
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "error_type": type(e).__name__,
+            "message": str(e),
+            "solution": [
+                "Check if the file is being used by another program",
+                "Try saving the file as UTF-8 encoded CSV",
+                "Contact the administrator to check MCP file access permissions"
+            ],
+            "traceback": traceback.format_exc()
+        }
+
+def process_sheet(df: pd.DataFrame) -> dict:
+    """Process a single sheet and return enhanced metadata for query generation."""
+    columns_metadata = []
+    for col in df.columns:
+        series = df[col]
+        col_type = get_descriptive_type(series)
+        examples = series.dropna().iloc[:3].tolist()
+        
+        col_meta = {
+            "name": col,
+            "type": col_type,
+            "examples": examples,
+            "stats": {
+                "null_count": series.isnull().sum(),
+                "unique_count": series.nunique(),
+                "is_numeric": pd.api.types.is_numeric_dtype(series),
+                "is_temporal": pd.api.types.is_datetime64_any_dtype(series),
+                "is_categorical": series.nunique() < 20 and pd.api.types.is_string_dtype(series)
+            },
+            "warnings": [],
+            "suggested_operations": []
+        }
+        
+        # Enhanced numeric stats
+        if pd.api.types.is_numeric_dtype(series):
+            col_meta["stats"].update({
+                "min": float(series.min()),
+                "max": float(series.max()),
+                "mean": float(series.mean()),
+                "std": float(series.std()),
+                "percentiles": {
+                    "25": float(series.quantile(0.25)),
+                    "50": float(series.quantile(0.5)),
+                    "75": float(series.quantile(0.75))
+                }
+            })
+            col_meta["suggested_operations"].extend([
+                "normalize", "scale", "log_transform", "binning"
+            ])
+        
+        # Enhanced string stats
+        if pd.api.types.is_string_dtype(series):
+            col_meta["stats"].update({
+                "max_length": int(series.str.len().max()),
+                "distinct_values": series.dropna().unique().tolist()[:10],
+                "value_counts": series.value_counts().head(5).to_dict()
+            })
+            col_meta["suggested_operations"].extend([
+                "one_hot_encode", "label_encode", "text_processing",
+                "string_cleaning", "regex_extract"
+            ])
+        
+        # Enhanced datetime stats
+        if pd.api.types.is_datetime64_any_dtype(series):
+            col_meta["stats"].update({
+                "min_date": str(series.min()),
+                "max_date": str(series.max()),
+                "time_span": str(series.max() - series.min())
+            })
+            col_meta["suggested_operations"].extend([
+                "extract_year", "extract_month", "time_delta",
+                "day_of_week", "time_binning"
+            ])
+        
+        # Enhanced warnings
+        null_count = series.isnull().sum()
+        unique_count = series.nunique()
+        
+        if null_count > 0:
+            null_pct = null_count / len(series) * 100
+            col_meta["warnings"].append(f"{null_count} null values ({null_pct:.1f}%)")
+        if unique_count == 1:
+            col_meta["warnings"].append("Single value column")
+        elif unique_count < 5:
+            col_meta["warnings"].append("Low cardinality (only {unique_count} values)")
+        if pd.api.types.is_numeric_dtype(series):
+            if series.abs().max() > 1e6:
+                col_meta["warnings"].append("Large values - consider scaling")
+            if series.skew() > 2:
+                col_meta["warnings"].append("Highly skewed distribution")
+        
+        columns_metadata.append(col_meta)
+    
+    return {
+        "rows": len(df),
+        "cols": len(df.columns),
+        "columns": [
+            {
+                "name": col['name'],
+                "type": col['type'],
+                "examples": col['examples'],
+                "stats": {
+                    "null_count": col['stats']['null_count'],
+                    "unique_count": col['stats']['unique_count']
+                }
+            }
+            for col in columns_metadata
+        ]
+    }

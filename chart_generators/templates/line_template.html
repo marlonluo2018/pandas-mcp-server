@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Line Chart - Chart.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            transform-origin: center top;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        label {
+            font-weight: 500;
+            font-size: 14px;
+            color: #495057;
+        }
+        button, select, input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover, select:hover {
+            background-color: #e9ecef;
+        }
+        button.active {
+            background-color: #4e73df;
+            color: white;
+            border-color: #4e73df;
+        }
+        input[type="range"] {
+            width: 120px;
+        }
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        .value-display {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .disabled {
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive Sales Trend Dashboard</h1>
+        
+        <!-- Control Panel -->
+        <div class="controls">
+            <div class="control-group">
+                <label>Y-Axis Start:</label>
+                <input type="number" id="yAxisMin" min="0" max="50000" step="5000" value="0">
+                <span id="yAxisMinValue" class="value-display">0</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Line Width:</label>
+                <input type="range" id="lineWidth" min="1" max="5" step="1" value="2">
+                <span id="lineWidthValue" class="value-display">2</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Point Size:</label>
+                <input type="range" id="pointSize" min="0" max="10" step="1" value="5">
+                <span id="pointSizeValue" class="value-display">5</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Width (X):</label>
+                <input type="range" id="canvasWidth" min="50" max="150" step="10" value="100">
+                <span id="canvasWidthValue" class="value-display">100%</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Height (Y):</label>
+                <input type="range" id="canvasHeight" min="50" max="150" step="10" value="100">
+                <span id="canvasHeightValue" class="value-display">100%</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Line Style:</label>
+                <select id="lineStyle">
+                    <option value="straight">Straight</option>
+                    <option value="smooth">Smooth</option>
+                    <option value="stepped">Stepped</option>
+                </select>
+            </div>
+            
+            <button id="resetBtn">Reset Settings</button>
+        </div>
+        
+        <!-- Chart Container -->
+        <div class="chart-container">
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Initial data
+        const data = {
+            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            datasets: [
+                {
+                    label: "Electronics",
+                    data: [6500, 5900, 8000, 8100, 8600, 8250, 9500, 10500, 12000, 11500, 13000, 15000],
+                    borderColor: "#4e73df",
+                    backgroundColor: "#4e73df",
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    tension: 0,
+                    fill: false
+                },
+                {
+                    label: "Clothing",
+                    data: [12000, 11000, 12500, 10500, 11500, 13000, 14000, 12500, 11000, 9500, 10000, 12000],
+                    borderColor: "#1cc88a",
+                    backgroundColor: "#1cc88a",
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    tension: 0,
+                    fill: false
+                },
+                {
+                    label: "Home Goods",
+                    data: [8000, 8500, 9000, 9500, 10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500],
+                    borderColor: "#36b9cc",
+                    backgroundColor: "#36b9cc",
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    tension: 0,
+                    fill: false
+                }
+            ]
+        };
+
+        // Create chart
+        let myChart;
+        function initChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        title: { 
+                            display: true,
+                            text: 'Monthly Sales Trend (2023)',
+                            font: { size: 16 }
+                        },
+                        datalabels: {
+                            display: false,
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (value) => '$' + value.toLocaleString(),
+                            color: '#333',
+                            font: { weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: parseInt(document.getElementById('yAxisMin').value),
+                            ticks: {
+                                callback: (value) => '$' + value.toLocaleString()
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+            
+            // Update disabled state of Y-Axis Min control
+            updateYAxisMinControlState();
+        }
+
+        // Update Y-Axis Min control state
+        function updateYAxisMinControlState() {
+            const yAxisMinControl = document.getElementById('yAxisMin');
+            const yAxisMinValueDisplay = document.getElementById('yAxisMinValue');
+            
+            // Always keep the Y-Axis Min control enabled
+            yAxisMinControl.classList.remove('disabled');
+            yAxisMinValueDisplay.classList.remove('disabled');
+            yAxisMinControl.disabled = false;
+        }
+
+        // Add error handling for chart initialization
+        try {
+            // Interaction controls
+            document.getElementById('lineWidth').addEventListener('input', function() {
+                const value = parseInt(this.value);
+                document.getElementById('lineWidthValue').textContent = value;
+                myChart.data.datasets.forEach(dataset => {
+                    dataset.borderWidth = value;
+                });
+                myChart.update();
+            });
+        } catch (error) {
+            console.error('Chart initialization error:', error);
+            alert('Error initializing chart. Please check the console for details.');
+        }
+
+        document.getElementById('pointSize').addEventListener('input', function() {
+            const value = parseInt(this.value);
+            document.getElementById('pointSizeValue').textContent = value;
+            myChart.data.datasets.forEach(dataset => {
+                dataset.pointRadius = value;
+            });
+            myChart.update();
+        });
+
+        document.getElementById('yAxisMin').addEventListener('input', function() {
+            const value = parseInt(this.value);
+            document.getElementById('yAxisMinValue').textContent = value;
+            myChart.options.scales.y.min = value;
+            myChart.update();
+        });
+
+        document.getElementById('lineStyle').addEventListener('change', function() {
+            const style = this.value;
+            myChart.data.datasets.forEach(dataset => {
+                if (style === 'smooth') {
+                    dataset.tension = 0.4;
+                    dataset.stepped = false;
+                } else if (style === 'stepped') {
+                    dataset.tension = 0;
+                    dataset.stepped = true;
+                } else {
+                    dataset.tension = 0;
+                    dataset.stepped = false;
+                }
+            });
+            myChart.update();
+        });
+
+        // Canvas size adjustment
+        function updateCanvasSize() {
+            const widthScale = parseInt(document.getElementById('canvasWidth').value) / 100;
+            const heightScale = parseInt(document.getElementById('canvasHeight').value) / 100;
+            
+            const container = document.querySelector('.chart-container');
+            container.style.transform = `scale(${widthScale}, ${heightScale})`;
+            
+            document.getElementById('canvasWidthValue').textContent = `${document.getElementById('canvasWidth').value}%`;
+            document.getElementById('canvasHeightValue').textContent = `${document.getElementById('canvasHeight').value}%`;
+            
+            if(myChart) {
+                setTimeout(() => myChart.resize(), 100);
+            }
+        }
+
+        // Add event listeners for sliders
+        document.getElementById('canvasWidth').addEventListener('input', updateCanvasSize);
+        document.getElementById('canvasHeight').addEventListener('input', updateCanvasSize);
+
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            document.getElementById('lineWidth').value = 2;
+            document.getElementById('pointSize').value = 5;
+            document.getElementById('yAxisMin').value = 0;
+            document.getElementById('canvasWidth').value = 100;
+            document.getElementById('canvasHeight').value = 100;
+            document.getElementById('lineStyle').value = 'straight';
+            
+            document.getElementById('lineWidthValue').textContent = '2';
+            document.getElementById('pointSizeValue').textContent = '5';
+            document.getElementById('yAxisMinValue').textContent = '0';
+            document.getElementById('canvasWidthValue').textContent = '100%';
+            document.getElementById('canvasHeightValue').textContent = '100%';
+            
+            const container = document.querySelector('.chart-container');
+            container.style.transform = 'scale(1, 1)';
+            
+            myChart.destroy();
+            initChart();
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', initChart);
+    </script>
+</body>
+</html>
