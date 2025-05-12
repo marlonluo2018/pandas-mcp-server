@@ -1,12 +1,34 @@
 import logging
 import traceback
+import os
+from logging.handlers import RotatingFileHandler
 from config import mcp
 from metadata import read_metadata
 from execution import run_pandas_code
 from visualization import generate_chartjs
 
-logging.basicConfig(level=logging.DEBUG)
+# Configure logging to both console and file
+log_dir = os.path.join(os.path.dirname(__file__), 'logs')
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, 'mcp_server.log')
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        RotatingFileHandler(
+            log_file,
+            maxBytes=5*1024*1024,  # 5MB
+            backupCount=3
+        ),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
+try:
+    logger.info(f"Logging configured. Log file: {log_file}")
+except PermissionError as e:
+    logger.error(f"Failed to create log file: {e}")
 
 @mcp.tool()
 def read_metadata_tool(file_path: str) -> dict:
@@ -31,7 +53,7 @@ def read_metadata_tool(file_path: str) -> dict:
                     - warnings, suggested_operations
     
     Example:
-        >>> read_metadata_wrapper("data/sample.xlsx")
+        >>> read_metadata("data/sample.xlsx")
         {
             "status": "SUCCESS",
             "file_info": {
@@ -73,10 +95,16 @@ def run_pandas_code_tool(code: str) -> dict:
         dict: Either the result or error information
         
     Example:
-        >>> run_pandas_code_wrapper('''
+        >>> run_pandas_code('''
         ... import pandas as pd
-        ... df = pd.read_csv(file_path)
-        ... result = df.sum()
+        ... # For Windows paths, use raw strings to avoid escape issues:
+        ... df = pd.read_csv(r'C:\\path\\to\\file.csv')
+        ...
+        ... # Convert value_counts() to dict for cleaner output:
+        ... counts = df['column'].value_counts().to_dict()
+        ...
+        ... # Always assign to 'result' variable for proper return:
+        ... result = df.describe()
         ... ''')
         {
             "result": {

@@ -44,12 +44,31 @@ def read_metadata(file_path: str) -> dict:
         file_ext = os.path.splitext(file_path)[1].lower()
         
         if file_ext == '.csv':
-            # Read CSV file
+            # Read CSV file with memory optimizations
             with open(file_path, 'rb') as f:
-                raw_data = f.read()
+                raw_data = f.read(10000)  # Only read first 10KB for encoding detection
                 encoding = detect(raw_data)['encoding']
             
-            df = pd.read_csv(file_path, encoding=encoding, nrows=100)
+            # Read with optimized dtypes and chunking if large
+            dtype_optim = {'object': 'category', 'float64': 'float32'}
+            if file_size > 10 * 1024 * 1024:  # >10MB
+                df = pd.concat(
+                    [chunk for chunk in pd.read_csv(
+                        file_path,
+                        encoding=encoding,
+                        nrows=100,
+                        dtype=dtype_optim,
+                        chunksize=10000
+                    )],
+                    ignore_index=True
+                ).head(100)  # Still only keep 100 rows
+            else:
+                df = pd.read_csv(
+                    file_path,
+                    encoding=encoding,
+                    nrows=100,
+                    dtype=dtype_optim
+                )
             table_meta = process_sheet(df)
             
             return {
@@ -77,12 +96,15 @@ def read_metadata(file_path: str) -> dict:
                 }
             }
         else:
-            # Read Excel file
-            excel_file = pd.ExcelFile(file_path)
+            # Read Excel file with memory cleanup
             sheets_metadata = []
-            
-            for sheet_name in excel_file.sheet_names:
-                df = excel_file.parse(sheet_name, nrows=100)
+            with pd.ExcelFile(file_path) as excel_file:
+                for sheet_name in excel_file.sheet_names:
+                    df = excel_file.parse(
+                        sheet_name,
+                        nrows=100,
+                        dtype={'object': 'category', 'float64': 'float32'}
+                    )
                 sheet_meta = process_sheet(df)
                 sheet_meta['sheet_name'] = sheet_name
                 sheets_metadata.append(sheet_meta)
@@ -133,6 +155,17 @@ def read_metadata(file_path: str) -> dict:
         }
 
 def process_sheet(df: pd.DataFrame) -> dict:
+    """Process a single sheet with memory optimizations"""
+    import gc
+    
+    # Convert to optimal dtypes
+    for col in df.columns:
+        if pd.api.types.is_object_dtype(df[col]):
+            if df[col].nunique() / len(df) < 0.5:  # Good candidate for category
+                df[col] = df[col].astype('category')
+        elif pd.api.types.is_float_dtype(df[col]):
+            df[col] = df[col].astype('float32')
+    
     """Process a single sheet and return enhanced metadata for query generation."""
     columns_metadata = []
     for col in df.columns:

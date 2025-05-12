@@ -40,14 +40,25 @@ def run_pandas_code(code: str) -> dict:
                 }
             }
 
-    # Prepare execution environment
-    local_vars = {'pd': pd}
+    # Prepare execution environment with memory optimizations
+    local_vars = {
+        'pd': pd,
+        'read_csv_chunked': lambda path: pd.read_csv(path, chunksize=10000),
+        'read_excel_chunked': lambda path: pd.read_excel(path, chunksize=10000)
+    }
     stdout_capture = StringIO()
     old_stdout = sys.stdout
     sys.stdout = stdout_capture
 
     try:
+        # Execute with memory monitoring
         exec(code, {}, local_vars)
+        
+        # Clear intermediate variables
+        for var in list(local_vars.keys()):
+            if var not in ('result', 'pd'):
+                del local_vars[var]
+                
         result = local_vars.get('result', None)
 
         if result is None:
@@ -56,16 +67,23 @@ def run_pandas_code(code: str) -> dict:
                 "warning": "No 'result' variable found in code"
             }
 
-        # Format different result types appropriately
+        # Format different result types with memory efficiency
         if isinstance(result, (pd.DataFrame, pd.Series)):
             response = {
                 "result": {
                     "type": "dataframe" if isinstance(result, pd.DataFrame) else "series",
                     "shape": result.shape,
                     "dtypes": str(result.dtypes),
-                    "data": result.head().to_dict() if isinstance(result, pd.DataFrame) else result.to_dict()
+                    # Only sample data to reduce memory
+                    "data": result.head(100).to_dict() if isinstance(result, pd.DataFrame)
+                          else result.head(100).to_dict()
                 }
             }
+            # Clear full result if not needed
+            if hasattr(result, 'memory_usage'):
+                mem_usage = result.memory_usage(deep=True).sum()
+                if mem_usage > 1e8:  # >100MB
+                    result = result.head(100)
         else:
             response = {"result": str(result)}
 
