@@ -3,6 +3,9 @@ from io import StringIO
 import traceback
 import pandas as pd
 from config import BLACKLIST
+import logging
+
+logger = logging.getLogger(__name__)
 
 def run_pandas_code(code: str) -> dict:
     """Execute pandas code with smart suggestions and security checks.
@@ -51,8 +54,31 @@ def run_pandas_code(code: str) -> dict:
     sys.stdout = stdout_capture
 
     try:
+        # First check for syntax errors
+        try:
+            compile(code, '<string>', 'exec')
+        except Exception as e:  # Catch all compilation errors
+            logger.error(f"Code compilation failed: {str(e)}")
+            return {
+                "content": [],
+                "isError": True,
+                "message": f"Code error: {str(e)}",
+                "traceback": traceback.format_exc(),
+                "output": stdout_capture.getvalue()
+            }
+
         # Execute with memory monitoring
-        exec(code, {}, local_vars)
+        try:
+            exec(code, {}, local_vars)
+        except Exception as e:
+            logger.error(f"Code execution failed: {str(e)}")
+            return {
+                "content": [],
+                "isError": True,
+                "message": str(e),
+                "traceback": traceback.format_exc(),
+                "output": stdout_capture.getvalue()
+            }
         
         # Clear intermediate variables
         for var in list(local_vars.keys()):
@@ -60,55 +86,47 @@ def run_pandas_code(code: str) -> dict:
                 del local_vars[var]
                 
         result = local_vars.get('result', None)
+        logger.debug(f"Result type: {type(result)}")
+        logger.debug(f"Result value: {result}")
 
         if result is None:
             return {
-                "output": stdout_capture.getvalue(),
-                "warning": "No 'result' variable found in code"
+                "content": [],
+                "isError": True,
+                "message": "No 'result' variable found in code",
+                "output": stdout_capture.getvalue()
             }
 
-        # Format different result types with memory efficiency
+        # Handle memory optimization for large DataFrames/Series
         if isinstance(result, (pd.DataFrame, pd.Series)):
-            response = {
-                "result": {
-                    "type": "dataframe" if isinstance(result, pd.DataFrame) else "series",
-                    "shape": result.shape,
-                    "dtypes": str(result.dtypes),
-                    # Only sample data to reduce memory
-                    "data": result.head(100).to_dict() if isinstance(result, pd.DataFrame)
-                          else result.head(100).to_dict()
-                }
-            }
-            # Clear full result if not needed
             if hasattr(result, 'memory_usage'):
                 mem_usage = result.memory_usage(deep=True).sum()
                 if mem_usage > 1e8:  # >100MB
                     result = result.head(100)
-        else:
-            response = {"result": str(result)}
-
-        return response
         
-    except Exception as e:
-        # Generate specific suggestions based on error
-        error_msg = str(e)
-        suggestions = []
-
-        if "No such file or directory" in error_msg:
-            suggestions.append("Use raw strings for paths: r'path\\to\\file.csv'")
-        if "could not convert string to float" in error_msg:
-            suggestions.append("Try: pd.to_numeric(df['col'], errors='coerce')")
-        if "AttributeError" in error_msg and "str" in error_msg:
-            suggestions.append("Try: df['col'].astype(str).str.strip()")
-
+        # Format result
+        if isinstance(result, (pd.DataFrame, pd.Series)):
+            content = result.to_dict()
+        elif isinstance(result, dict):
+            content = result
+        else:
+            content = str(result)
+        
+        logger.debug(f"Final content: {content}")
+        
         return {
-            "error": {
-                "type": type(e).__name__,
-                "message": error_msg,
-                "traceback": traceback.format_exc(),
-                "output": stdout_capture.getvalue(),
-                "suggestions": suggestions if suggestions else None
-            }
+            "content": [content] if content is not None else [],
+            "isError": False
+        }
+
+    except Exception as e:
+        logger.error(f"Execution failed: {str(e)}")
+        return {
+            "content": [],
+            "isError": True,
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+            "output": stdout_capture.getvalue()
         }
     finally:
         sys.stdout = old_stdout
