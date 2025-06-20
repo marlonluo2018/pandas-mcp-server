@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Summary of Learner Status - Chart.js</title>
+    <title>Interactive Line Chart - Chart.js</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
@@ -79,29 +79,42 @@
         input[type="range"] {
             width: 120px;
         }
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
         .value-display {
             min-width: 40px;
             text-align: center;
             font-weight: bold;
         }
+        .disabled {
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Summary of Learner Status</h1>
+        <h1>Interactive Sales Trend Dashboard</h1>
         
-        <!-- 控制面板 -->
+        <!-- Control Panel -->
         <div class="controls">
-            <div class="control-group">
-                <label>Bar Width:</label>
-                <input type="range" id="barWidth" min="0.1" max="1" step="0.1" value="0.6">
-                <span id="barWidthValue" class="value-display">0.6</span>
-            </div>
-            
             <div class="control-group">
                 <label>Y-Axis Start:</label>
                 <input type="number" id="yAxisMin" min="0" max="50000" step="5000" value="0">
                 <span id="yAxisMinValue" class="value-display">0</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Line Width:</label>
+                <input type="range" id="lineWidth" min="1" max="5" step="1" value="2">
+                <span id="lineWidthValue" class="value-display">2</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Point Size:</label>
+                <input type="range" id="pointSize" min="0" max="10" step="1" value="5">
+                <span id="pointSizeValue" class="value-display">5</span>
             </div>
             
             <div class="control-group">
@@ -116,81 +129,146 @@
                 <span id="canvasHeightValue" class="value-display">100%</span>
             </div>
             
+            <div class="control-group">
+                <label>Line Style:</label>
+                <select id="lineStyle">
+                    <option value="straight">Straight</option>
+                    <option value="smooth">Smooth</option>
+                    <option value="stepped">Stepped</option>
+                </select>
+            </div>
+            
             <button id="resetBtn">Reset Settings</button>
         </div>
         
-        <!-- 图表容器 -->
+        <!-- Chart Container -->
         <div class="chart-container">
-            <canvas id="salesChart"></canvas>
+            <canvas id="trendChart"></canvas>
         </div>
     </div>
 
     <script>
-        // 初始化数据
+        // Initial data
         const data = {
-    "labels": [
-        "WAITLIST",
-        "CONFIRMED",
-        "CANCELLED"
-    ],
-    "datasets": []
-};
+            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            datasets: [
+                {
+                    label: "Electronics",
+                    data: [6500, 5900, 8000, 8100, 8600, 8250, 9500, 10500, 12000, 11500, 13000, 15000],
+                    borderColor: "#4e73df",
+                    backgroundColor: "#4e73df",
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    tension: 0,
+                    fill: false
+                },
+                {
+                    label: "Clothing",
+                    data: [12000, 11000, 12500, 10500, 11500, 13000, 14000, 12500, 11000, 9500, 10000, 12000],
+                    borderColor: "#1cc88a",
+                    backgroundColor: "#1cc88a",
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    tension: 0,
+                    fill: false
+                },
+                {
+                    label: "Home Goods",
+                    data: [8000, 8500, 9000, 9500, 10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500],
+                    borderColor: "#36b9cc",
+                    backgroundColor: "#36b9cc",
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    tension: 0,
+                    fill: false
+                }
+            ]
+        };
 
-        // 创建图表
+        // Create chart
         let myChart;
         function initChart() {
-            const ctx = document.getElementById('salesChart').getContext('2d');
+            const ctx = document.getElementById('trendChart').getContext('2d');
             myChart = new Chart(ctx, {
-                type: 'bar', // 固定为柱状图
+                type: 'line',
                 data: data,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: true,
                             position: 'top',
                             labels: {
-                                boxWidth: 12,
-                                padding: 20,
-                                font: {
-                                    size: 12
-                                }
+                                usePointStyle: true,
+                                padding: 20
                             }
                         },
                         title: { 
                             display: true,
-                            text: "Summary of Learner Status",
+                            text: 'Monthly Sales Trend (2023)',
                             font: { size: 16 }
                         },
                         datalabels: {
+                            display: false,
                             anchor: 'end',
                             align: 'top',
-                            formatter: (value) => value.toLocaleString(),
+                            formatter: (value) => '$' + value.toLocaleString(),
                             color: '#333',
                             font: { weight: 'bold' }
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: false,
                             min: parseInt(document.getElementById('yAxisMin').value),
                             ticks: {
-                            callback: (value) => value.toString()
+                                callback: (value) => '$' + value.toLocaleString()
                             }
                         }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
                     }
                 },
                 plugins: [ChartDataLabels]
             });
+            
+            // Update disabled state of Y-Axis Min control
+            updateYAxisMinControlState();
         }
 
-        // 交互控制
-        document.getElementById('barWidth').addEventListener('input', function() {
-            const value = parseFloat(this.value);
-            document.getElementById('barWidthValue').textContent = value;
+        // Update Y-Axis Min control state
+        function updateYAxisMinControlState() {
+            const yAxisMinControl = document.getElementById('yAxisMin');
+            const yAxisMinValueDisplay = document.getElementById('yAxisMinValue');
+            
+            // Always keep the Y-Axis Min control enabled
+            yAxisMinControl.classList.remove('disabled');
+            yAxisMinValueDisplay.classList.remove('disabled');
+            yAxisMinControl.disabled = false;
+        }
+
+        // Add error handling for chart initialization
+        try {
+            // Interaction controls
+            document.getElementById('lineWidth').addEventListener('input', function() {
+                const value = parseInt(this.value);
+                document.getElementById('lineWidthValue').textContent = value;
+                myChart.data.datasets.forEach(dataset => {
+                    dataset.borderWidth = value;
+                });
+                myChart.update();
+            });
+        } catch (error) {
+            console.error('Chart initialization error:', error);
+            alert('Error initializing chart. Please check the console for details.');
+        }
+
+        document.getElementById('pointSize').addEventListener('input', function() {
+            const value = parseInt(this.value);
+            document.getElementById('pointSizeValue').textContent = value;
             myChart.data.datasets.forEach(dataset => {
-                dataset.barPercentage = value;
+                dataset.pointRadius = value;
             });
             myChart.update();
         });
@@ -202,7 +280,24 @@
             myChart.update();
         });
 
-        // 画布尺寸调整功能
+        document.getElementById('lineStyle').addEventListener('change', function() {
+            const style = this.value;
+            myChart.data.datasets.forEach(dataset => {
+                if (style === 'smooth') {
+                    dataset.tension = 0.4;
+                    dataset.stepped = false;
+                } else if (style === 'stepped') {
+                    dataset.tension = 0;
+                    dataset.stepped = true;
+                } else {
+                    dataset.tension = 0;
+                    dataset.stepped = false;
+                }
+            });
+            myChart.update();
+        });
+
+        // Canvas size adjustment
         function updateCanvasSize() {
             const widthScale = parseInt(document.getElementById('canvasWidth').value) / 100;
             const heightScale = parseInt(document.getElementById('canvasHeight').value) / 100;
@@ -214,21 +309,24 @@
             document.getElementById('canvasHeightValue').textContent = `${document.getElementById('canvasHeight').value}%`;
             
             if(myChart) {
-                // 延迟执行以确保变换完成
                 setTimeout(() => myChart.resize(), 100);
             }
         }
 
-        // 为两个滑块添加事件监听
+        // Add event listeners for sliders
         document.getElementById('canvasWidth').addEventListener('input', updateCanvasSize);
         document.getElementById('canvasHeight').addEventListener('input', updateCanvasSize);
 
         document.getElementById('resetBtn').addEventListener('click', function() {
-            document.getElementById('barWidth').value = 0.6;
+            document.getElementById('lineWidth').value = 2;
+            document.getElementById('pointSize').value = 5;
             document.getElementById('yAxisMin').value = 0;
             document.getElementById('canvasWidth').value = 100;
             document.getElementById('canvasHeight').value = 100;
-            document.getElementById('barWidthValue').textContent = '0.6';
+            document.getElementById('lineStyle').value = 'straight';
+            
+            document.getElementById('lineWidthValue').textContent = '2';
+            document.getElementById('pointSizeValue').textContent = '5';
             document.getElementById('yAxisMinValue').textContent = '0';
             document.getElementById('canvasWidthValue').textContent = '100%';
             document.getElementById('canvasHeightValue').textContent = '100%';
@@ -240,7 +338,7 @@
             initChart();
         });
 
-        // 初始化
+        // Initialize
         document.addEventListener('DOMContentLoaded', initChart);
     </script>
 </body>

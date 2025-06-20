@@ -1,32 +1,26 @@
-import time
 from .base import ChartGenerator
 
-class LineChartGenerator(ChartGenerator):
+class BarChartGenerator(ChartGenerator):
     def __init__(self):
         super().__init__()
-        self.chart_type = "line"
+        self.chart_type = "bar"
 
     def _get_type_specific_controls(self):
         return """
         <div class="control-group">
-            <label for="lineTension">Line Smoothness:</label>
-            <input type="range" id="lineTension" min="0" max="1" step="0.1" value="0.4">
+            <label for="barWidth">Bar Width:</label>
+            <input type="range" id="barWidth" min="0.1" max="1" step="0.1" value="0.8" onchange="updateChart()">
         </div>
         <div class="control-group">
-            <label for="steppedLine">Stepped Line:</label>
-            <input type="checkbox" id="steppedLine">
-        </div>
-        <div class="control-group">
-            <label for="beginAtZero">Start Y at Zero:</label>
-            <input type="checkbox" id="beginAtZero" checked>
+            <label for="yAxisMin">Y-Axis Minimum:</label>
+            <input type="number" id="yAxisMin" value="0" onchange="updateChart()">
         </div>
         """
 
     def _get_type_specific_js(self):
         return """
-            newConfig.options.scales.y.beginAtZero = document.getElementById('beginAtZero').checked;
-            newConfig.options.elements.line.tension = parseFloat(document.getElementById('lineTension').value);
-            newConfig.options.elements.line.stepped = document.getElementById('steppedLine').checked;
+            newConfig.options.barPercentage = parseFloat(document.getElementById('barWidth').value);
+            newConfig.options.scales.y.min = parseFloat(document.getElementById('yAxisMin').value);
         """
 
     def generate(self, data, **options):
@@ -47,13 +41,11 @@ class LineChartGenerator(ChartGenerator):
                     'data': col['examples'],
                     'backgroundColor': self.default_colors[i % len(self.default_colors)],
                     'borderColor': self.default_colors[i % len(self.default_colors)].replace('0.7', '1'),
-                    'borderWidth': 2,
-                    'tension': 0.4,
-                    'fill': False
+                    'borderWidth': 1
                 })
         
         config = {
-            'type': 'line',
+            'type': 'bar',
             'data': {
                 'labels': labels,
                 'datasets': datasets
@@ -68,20 +60,15 @@ class LineChartGenerator(ChartGenerator):
                 'plugins': {
                     'title': {
                         'display': True,
-                        'text': options.get('title', 'Line Chart')
+                        'text': options.get('title', 'Bar Chart')
                     },
                     'datalabels': {
                         'anchor': 'end',
                         'align': 'top'
                     }
                 },
-                'elements': {
-                    'line': {
-                        'tension': 0.4,
-                        'stepped': False
-                    }
-                }
+                'barPercentage': 0.8
             }
         }
         
-        return self._save_chart(config, options.get('title', 'Line Chart'))
+        return self._save_chart(config, options.get('title', 'Bar Chart'))

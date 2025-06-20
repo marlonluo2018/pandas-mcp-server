@@ -1,11 +1,20 @@
 import os
-from visualization import generate_chartjs as generate_pyecharts
+import sys
+import webbrowser
+from core.visualization import generate_chartjs as generate_pyecharts
+
+# Ensure output is flushed immediately
+sys.stdout.reconfigure(line_buffering=True)
+print("Python version:", sys.version, flush=True)
+print("Working directory:", os.getcwd(), flush=True)
 
 def print_chart_result(result, chart_type):
     if result['status'] == 'SUCCESS':
         print(f"✅ {chart_type} Chart generated successfully")
         print(f"📄 HTML path: {result['html_path']}")
-        print(f"🔍 File exists: {os.path.exists(result['html_path'])}\n")
+        print(f"🔍 File exists: {os.path.exists(result['html_path'])}")
+        webbrowser.open(result['html_path'])
+        print()
     else:
         print(f"❌ Failed to generate {chart_type} chart:")
         print(result['message'])
@@ -39,7 +48,11 @@ line_data = {
 }
 
 # Generate and test charts
-print("Testing chart generation...\n")
+print("\nTesting chart generation...", flush=True)
+charts_dir = os.path.join(os.path.dirname(__file__), 'core', 'charts')
+print("Charts directory:", charts_dir, flush=True)
+print("Existing chart files:", os.listdir(charts_dir), flush=True)
+
 
 # Test pie chart
 pie_result = generate_pyecharts(
@@ -65,4 +78,4 @@ line_result = generate_pyecharts(
 )
 print_chart_result(line_result, "Line")
 
-print("✅ All charts generated successfully")
+print("\n✅ All charts generated successfully", flush=True)

@@ -2,7 +2,7 @@ import sys
 from io import StringIO
 import traceback
 import pandas as pd
-from config import BLACKLIST
+from .config import BLACKLIST
 import logging
 
 logger = logging.getLogger(__name__)
@@ -61,10 +61,12 @@ def run_pandas_code(code: str) -> dict:
             logger.error(f"Code compilation failed: {str(e)}")
             return {
                 "content": [],
-                "isError": True,
-                "message": f"Code error: {str(e)}",
-                "traceback": traceback.format_exc(),
-                "output": stdout_capture.getvalue()
+                "error": {
+                    "isError": True,
+                    "message": f"Code error: {str(e)}",
+                    "traceback": traceback.format_exc(),
+                    "output": stdout_capture.getvalue()
+                }
             }
 
         # Execute with memory monitoring
@@ -74,10 +76,12 @@ def run_pandas_code(code: str) -> dict:
             logger.error(f"Code execution failed: {str(e)}")
             return {
                 "content": [],
-                "isError": True,
-                "message": str(e),
-                "traceback": traceback.format_exc(),
-                "output": stdout_capture.getvalue()
+                "error": {
+                    "isError": True,
+                    "message": str(e),
+                    "traceback": traceback.format_exc(),
+                    "output": stdout_capture.getvalue()
+                }
             }
         
         # Clear intermediate variables

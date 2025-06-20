@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learner Status Distribution - Chart.js</title>
+    <title>Bar Chart - Chart.js</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
@@ -88,7 +88,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Learner Status Distribution</h1>
+        <h1>Bar Chart</h1>
         
         <!-- 控制面板 -->
         <div class="controls">
@@ -129,20 +129,34 @@
         // 初始化数据
         const data = {
     "labels": [
-        "WAITLIST",
-        "CONFIRMED",
-        "CANCELLED"
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr"
     ],
     "datasets": [
         {
-            "label": "COUNTS",
+            "label": "Revenue",
             "data": [
-                22,
-                12,
-                5
+                150,
+                240,
+                350,
+                480
             ],
             "backgroundColor": "rgba(255, 99, 132, 0.7)",
             "borderColor": "rgba(255, 99, 132, 1)",
+            "borderWidth": 1
+        },
+        {
+            "label": "Cost",
+            "data": [
+                100,
+                180,
+                250,
+                320
+            ],
+            "backgroundColor": "rgba(75, 192, 192, 0.7)",
+            "borderColor": "rgba(75, 192, 192, 1)",
             "borderWidth": 1
         }
     ]
@@ -172,7 +186,7 @@
                         },
                         title: { 
                             display: true,
-                            text: "Learner Status Distribution",
+                            text: "Bar Chart",
                             font: { size: 16 }
                         },
                         datalabels: {

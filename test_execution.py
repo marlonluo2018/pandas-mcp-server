@@ -1,5 +1,5 @@
 import pytest
-from execution import run_pandas_code
+from core.execution import run_pandas_code
 import pandas as pd
 
 def test_run_pandas_code_with_dataframe():
@@ -31,9 +31,9 @@ def test_run_pandas_code_error():
     # Test with guaranteed syntax error
     code = "import pandas as pd\nx = 1 + "  # Missing operand
     response = run_pandas_code(code)
-    assert response['isError']
-    assert 'message' in response
-    assert 'traceback' in response
+    assert response['error']['isError']
+    assert 'message' in response['error']
+    assert 'traceback' in response['error']
 
     # Test with clear runtime error
     code = """
@@ -42,10 +42,10 @@ df = pd.DataFrame({'A': [1, 2]})
 result = df['nonexistent_column']  # Will raise KeyError
 """
     response = run_pandas_code(code)
-    assert response['isError']
-    assert 'message' in response
-    assert 'traceback' in response
-    assert 'traceback' in response
+    assert response['error']['isError']
+    assert 'message' in response['error']
+    assert 'traceback' in response['error']
+    assert 'traceback' in response['error']
 
 def test_run_pandas_code_no_result():
     """Test case where no result variable is set"""

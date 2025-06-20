@@ -1,7 +1,7 @@
-from chart_generators import BarChartGenerator, PieChartGenerator, LineChartGenerator
+from .chart_generators import BarChartGenerator, PieChartGenerator, LineChartGenerator
 import os
 import traceback
-from config import CHARTS_DIR
+from .config import CHARTS_DIR
 from urllib.parse import parse_qs
 
 def generate_chartjs(
@@ -9,7 +9,6 @@ def generate_chartjs(
     chart_types: list = None,
     title: str = "Data Visualization",
     request_params: dict = None,
-    **kwargs
 ) -> dict:
     """Generate interactive Chart.js visualizations from structured data."""
     try:
@@ -50,7 +49,6 @@ def generate_chartjs(
 
         # Ensure title is passed properly
         options['title'] = str(title) if title else "Chart"
-        final_options = {**options, **kwargs}
 
         # Debug logging
         print(f"DEBUG - Data structure: {data}")
@@ -58,7 +56,7 @@ def generate_chartjs(
         if data['columns']:
             print(f"DEBUG - First column type: {type(data['columns'][0])}")
 
-        result = generator.generate(data, **final_options)
+        result = generator.generate(data)
         return result
 
     except Exception as e:

@@ -2,10 +2,10 @@ import logging
 import traceback
 import os
 from logging.handlers import RotatingFileHandler
-from config import mcp
-from metadata import read_metadata
-from execution import run_pandas_code
-from visualization import generate_chartjs
+from core.config import mcp
+from core.metadata import read_metadata
+from core.execution import run_pandas_code
+from core.visualization import generate_chartjs
 
 # Configure logging to both console and file
 log_dir = os.path.join(os.path.dirname(__file__), 'logs')
@@ -121,8 +121,7 @@ def generate_chartjs_tool(
     data: dict,
     chart_types: list = None,
     title: str = "Data Visualization",
-    request_params: dict = None,
-    **kwargs
+    request_params: dict = None
 ) -> dict:
     """Generate interactive Chart.js visualizations from structured data.
     
@@ -181,7 +180,7 @@ def generate_chartjs_tool(
             "html_path": "/path/to/chart.html"
         }
     """
-    return generate_chartjs(data, chart_types, title, request_params, **kwargs)
+    return generate_chartjs(data, chart_types, title, request_params)
 
 def main():
     try:

@@ -1,9 +1,10 @@
 import os
+import csv
 import traceback
 import pandas as pd
 from chardet import detect
-from config import MAX_FILE_SIZE
-from data_types import get_descriptive_type
+from .config import MAX_FILE_SIZE
+from .data_types import get_descriptive_type
 
 def read_metadata(file_path: str) -> dict:
     """Read file metadata (Excel or CSV) and return in MCP-compatible format.
@@ -49,26 +50,33 @@ def read_metadata(file_path: str) -> dict:
                 raw_data = f.read(10000)  # Only read first 10KB for encoding detection
                 encoding = detect(raw_data)['encoding']
             
-            # Read with optimized dtypes and chunking if large
-            dtype_optim = {'object': 'category', 'float64': 'float32'}
-            if file_size > 10 * 1024 * 1024:  # >10MB
-                df = pd.concat(
-                    [chunk for chunk in pd.read_csv(
-                        file_path,
-                        encoding=encoding,
-                        nrows=100,
-                        dtype=dtype_optim,
-                        chunksize=10000
-                    )],
-                    ignore_index=True
-                ).head(100)  # Still only keep 100 rows
-            else:
-                df = pd.read_csv(
-                    file_path,
-                    encoding=encoding,
-                    nrows=100,
-                    dtype=dtype_optim
-                )
+            # Read file with csv reader to handle quoted fields
+            with open(file_path, 'r', encoding=encoding) as f:
+                reader = csv.reader(f)
+                # Skip sep= line
+                first_line = next(reader)
+                if first_line and first_line[0].startswith('sep='):
+                    header = next(reader)  # Get actual header row
+                else:
+                    header = first_line  # No sep= line, first line is header
+                
+                # Read first 100 data rows
+                lines = []
+                for i, row in enumerate(reader):
+                    if i >= 100:
+                        break
+                    lines.append(row)
+            
+            # Create DataFrame from cleaned data
+            df = pd.DataFrame(lines, columns=header)
+            
+            # Apply optimized dtypes column by column
+            for col in df.columns:
+                if pd.api.types.is_object_dtype(df[col]):
+                    df[col] = df[col].astype('category')
+                elif pd.api.types.is_float_dtype(df[col]):
+                    df[col] = df[col].astype('float32')
+            
             table_meta = process_sheet(df)
             
             return {
@@ -81,18 +89,7 @@ def read_metadata(file_path: str) -> dict:
                 },
                 "data": {
                     "rows": table_meta['rows'],
-                    "columns": [
-                        {
-                            "name": col['name'],
-                            "type": col['type'],
-                            "examples": col['examples'],
-                            "stats": {
-                                "null_count": col['stats']['null_count'],
-                                "unique_count": col['stats']['unique_count']
-                            }
-                        }
-                        for col in table_meta['columns']
-                    ]
+                    "columns": table_meta['columns']
                 }
             }
         else:

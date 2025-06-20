@@ -1,4 +1,3 @@
-import time
 from .base import ChartGenerator
 
 class PieChartGenerator(ChartGenerator):
