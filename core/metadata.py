@@ -166,12 +166,21 @@ def process_sheet(df: pd.DataFrame) -> dict:
     """Process a single sheet and return enhanced metadata for query generation."""
     columns_metadata = []
     for col in df.columns:
+        # Skip empty column names
+        if not str(col).strip():
+            continue
+            
         series = df[col]
         col_type = get_descriptive_type(series)
-        examples = series.dropna().iloc[:3].tolist()
+        
+        # Safely get examples
+        try:
+            examples = series.dropna().iloc[:3].tolist()
+        except AttributeError:
+            examples = []
         
         col_meta = {
-            "name": col,
+            "name": str(col).strip(),
             "type": col_type,
             "examples": examples,
             "stats": {
