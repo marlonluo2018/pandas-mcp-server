@@ -1,51 +1,103 @@
-# Excel-MCP Server Visualization Project
+# Pandas-MCP Server
 
-This project provides visualization capabilities for Excel data through an MCP server interface, generating interactive charts using Pyecharts.
+A Model Context Protocol (MCP) server that enables LLMs to execute pandas code through a standardized workflow:
 
-## Features
+1. **Metadata Reading** - Understand data structure
+2. **Pandas Execution** - Process and analyze data
+3. **Chart Generation** - Visualize results (optional)
 
-- Generate bar, line, and pie charts from Excel data
-- Customizable chart templates
-- MCP server integration for remote chart generation
-- Metadata handling for data formatting
+## Core Features
+
+### Standard Workflow Tools
+1. **read_metadata** - Extract structured metadata from Excel/CSV files
+   ```python
+   {
+     "tool": "read_metadata",
+     "args": {
+       "file_path": "/path/to/data.xlsx" 
+     }
+   }
+   ```
+
+2. **run_pandas_code** - Execute pandas operations with smart suggestions
+   ```python
+   {
+     "tool": "run_pandas_code",
+     "args": {
+       "code": "df.groupby('category').sum()"
+     }
+   }
+   ```
+
+3. **generate_chart** - Create visualizations (optional)
+   ```python
+   {
+     "tool": "generate_chart",
+     "args": {
+       "data": {...},
+       "chart_types": ["bar"]
+     }
+   }
+   ```
+
+## User-Friendly CLI Interface
+
+The `cli.py` provides an intuitive menu-driven interface that guides users through the workflow without needing to remember commands:
+
+```bash
+python cli.py
+```
+
+This launches an interactive menu:
+```
+Excel Data Processing Tool
+------------------------
+
+Main Menu:
+1. Read file metadata
+2. Execute pandas code 
+3. Generate chart
+4. Exit
+
+Enter your choice (1-4):
+```
+
+### Key Benefits:
+- No need to remember commands - guided step-by-step
+- Automatic input validation
+- Clear error messages
+- Handles file paths with spaces automatically
+
+For advanced users, command-line mode is still available:
+```bash
+# Direct command execution
+python cli.py metadata data.csv
+python cli.py execute analysis.py
+python cli.py chart results.json --type bar
+```
 
 ## Installation
 
-1. Clone this repository
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-## Usage
+## Server Usage
 
-Run the server:
+Start the MCP server:
 ```bash
 python server.py
 ```
 
-
-
-## Chart Generation
-
-Available chart types:
-- Bar charts (`/generate/bar`)
-- Line charts (`/generate/line`) 
-- Pie charts (`/generate/pie`)
-
-Each endpoint accepts Excel data and returns an interactive HTML chart.
-
 ## Configuration
 
-Edit `config.py` to customize:
-- Server port
-- Default chart styles
-- Template paths
+Edit `core/config.py` to customize:
+- Workflow steps
+- Memory limits
+- Logging settings
 
 ## Dependencies
 
-- Python 3.8+
-- Pyecharts
-- Flask
-- Pandas
-- Openpyxl
+- pandas>=2.0.0
+- fastmcp>=1.0.0  
+- chardet>=5.0.0
