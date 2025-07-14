@@ -1,10 +1,14 @@
 import os
 import csv
 import traceback
+import logging
 import pandas as pd
 from chardet import detect
 from .config import MAX_FILE_SIZE
 from .data_types import get_descriptive_type
+
+# Get metadata logger
+logger = logging.getLogger('metadata')
 
 def read_metadata(file_path: str) -> dict:
     """Read file metadata (Excel or CSV) and return in MCP-compatible format.
@@ -28,6 +32,9 @@ def read_metadata(file_path: str) -> dict:
                     - warnings, suggested_operations
     """
     try:
+        logger.info(f"Starting metadata processing for file: {file_path}")
+        logger.debug(f"File extension: {os.path.splitext(file_path)[1].lower()}")
+        
         # Validate file existence and size
         if not os.path.exists(file_path):
             return {"status": "ERROR", "error": "FILE_NOT_FOUND", "path": file_path}
@@ -46,9 +53,11 @@ def read_metadata(file_path: str) -> dict:
         
         if file_ext == '.csv':
             # Read CSV file with memory optimizations
+            logger.info("Processing CSV file")
             with open(file_path, 'rb') as f:
                 raw_data = f.read(10000)  # Only read first 10KB for encoding detection
                 encoding = detect(raw_data)['encoding']
+            logger.debug(f"Detected encoding: {encoding}")
             
             # Read file with csv reader to handle quoted fields
             with open(file_path, 'r', encoding=encoding) as f:
@@ -93,18 +102,28 @@ def read_metadata(file_path: str) -> dict:
                 }
             }
         else:
+            logger.info("Processing Excel file")
             # Read Excel file with memory cleanup
             sheets_metadata = []
             with pd.ExcelFile(file_path) as excel_file:
                 for sheet_name in excel_file.sheet_names:
-                    df = excel_file.parse(
-                        sheet_name,
-                        nrows=100,
-                        dtype={'object': 'category', 'float64': 'float32'}
-                    )
-                sheet_meta = process_sheet(df)
-                sheet_meta['sheet_name'] = sheet_name
-                sheets_metadata.append(sheet_meta)
+                    try:
+                        df = excel_file.parse(
+                            sheet_name,
+                            nrows=100,
+                            dtype={'object': 'category', 'float64': 'float32'}
+                        )
+                        sheet_meta = process_sheet(df)
+                        sheet_meta['sheet_name'] = sheet_name
+                        sheets_metadata.append(sheet_meta)
+                        
+                        # Force cleanup
+                        del df
+                        import gc
+                        gc.collect()
+                    except Exception as e:
+                        logging.error(f"Error processing sheet {sheet_name}: {str(e)}")
+                        continue
             
             # Excel file response
             return {
@@ -139,7 +158,7 @@ def read_metadata(file_path: str) -> dict:
             }
             
     except Exception as e:
-        return {
+        error_info = {
             "status": "ERROR",
             "error_type": type(e).__name__,
             "message": str(e),
@@ -150,10 +169,32 @@ def read_metadata(file_path: str) -> dict:
             ],
             "traceback": traceback.format_exc()
         }
+        logger.error(f"Metadata processing failed: {error_info['error_type']}")
+        logger.debug(f"Error details: {error_info['message']}")
+        logger.debug(f"Full traceback:\n{error_info['traceback']}")
+        return error_info
+    finally:
+        # Log final memory stats
+        try:
+            import psutil
+            process = psutil.Process()
+            memory_logger = logging.getLogger('memory_usage')
+            current_mem = process.memory_info().rss / 1024 / 1024
+            memory_logger.info(f"Final memory usage: {current_mem:.1f}MB")
+            logger.info("Metadata processing complete")
+        except Exception as e:
+            logger.warning(f"Failed to log memory stats: {e}")
 
 def process_sheet(df: pd.DataFrame) -> dict:
     """Process a single sheet with memory optimizations"""
     import gc
+    import logging
+    import psutil
+    
+    memory_logger = logging.getLogger('memory_usage')
+    process = psutil.Process()
+    mem_before = process.memory_info().rss / 1024 / 1024
+    memory_logger.debug(f"Memory usage before processing sheet: {mem_before:.1f}MB")
     
     # Convert to optimal dtypes
     for col in df.columns:
@@ -245,7 +286,7 @@ def process_sheet(df: pd.DataFrame) -> dict:
         if unique_count == 1:
             col_meta["warnings"].append("Single value column")
         elif unique_count < 5:
-            col_meta["warnings"].append("Low cardinality (only {unique_count} values)")
+            col_meta["warnings"].append(f"Low cardinality (only {unique_count} values)")
         if pd.api.types.is_numeric_dtype(series):
             if series.abs().max() > 1e6:
                 col_meta["warnings"].append("Large values - consider scaling")
@@ -253,6 +294,12 @@ def process_sheet(df: pd.DataFrame) -> dict:
                 col_meta["warnings"].append("Highly skewed distribution")
         
         columns_metadata.append(col_meta)
+    
+    # Force cleanup of temporary objects
+    gc.collect()
+    mem_after = process.memory_info().rss / 1024 / 1024
+    memory_logger.debug(f"Memory usage after processing sheet: {mem_after:.1f}MB")
+    memory_logger.debug(f"Memory change during sheet processing: {mem_after - mem_before:.1f}MB")
     
     return {
         "rows": len(df),
