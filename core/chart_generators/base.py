@@ -14,7 +14,7 @@ class ChartGenerator(ABC):
 
     def _save_chart(self, config, title="Chart"):
         # Get absolute path to this script's directory
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         
         # Ensure charts directory exists
         charts_dir = os.path.join(base_dir, 'charts')
