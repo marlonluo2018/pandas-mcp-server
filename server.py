@@ -142,7 +142,32 @@ def generate_chartjs_tool(
     """Generate interactive Chart.js visualizations from structured data.
     
     Args:
-        data: Structured data in MCP format
+        data: Structured data in MCP format with required structure:
+            {
+                "columns": [
+                    {
+                        "name": str,      # Column name
+                        "type": str,       # "string" or "number"
+                        "examples": list   # Array of values
+                    },
+                    ...                   # Additional columns
+                ]
+            }
+            Example:
+            {
+                "columns": [
+                    {
+                        "name": "Category",
+                        "type": "string",
+                        "examples": ["A", "B", "C"]
+                    },
+                    {
+                        "name": "Value",
+                        "type": "number",
+                        "examples": [10, 20, 30]
+                    }
+                ]
+            }
         chart_types: List of supported chart types to generate (first is used)
         title: Chart title string
         request_params: Additional visualization parameters (optional)

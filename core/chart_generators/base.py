@@ -15,17 +15,23 @@ class ChartGenerator(ABC):
     def _save_chart(self, config, title="Chart"):
         # Get absolute path to this script's directory
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        print(f"DEBUG - Base directory: {base_dir}")
         
         # Ensure charts directory exists
         charts_dir = os.path.join(base_dir, 'charts')
+        print(f"DEBUG - Charts directory: {charts_dir}")
         if not os.path.exists(charts_dir):
             os.makedirs(charts_dir)
             
         filename = f"chart_{self.chart_type}_{int(time.time())}.html"
         filepath = os.path.join(charts_dir, filename)
+        print(f"DEBUG - Output file path: {filepath}")
         
-        # Load template file using absolute path
-        template_path = os.path.join(base_dir, 'chart_generators', 'templates', f'{self.chart_type}_template.html')
+        # Load template file using absolute path (include 'core' in path)
+        template_path = os.path.join(base_dir, 'core', 'chart_generators', 'templates', f'{self.chart_type}_template.html')
+        print(f"DEBUG - Template path: {template_path}")
+        print(f"DEBUG - Template exists: {os.path.exists(template_path)}")
+        
         if not os.path.exists(template_path):
             raise FileNotFoundError(f"Template file not found at: {template_path}")
         with open(template_path, 'r', encoding='utf-8') as f:
