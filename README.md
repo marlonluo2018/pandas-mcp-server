@@ -2,20 +2,57 @@
 
 A comprehensive Model Context Protocol (MCP) server that enables LLMs to execute pandas code through a standardized workflow for data analysis and visualization.
 
-## 🎯 Overview
+## 🎯 MCP Server Overview
 
-The Pandas-MCP Server provides a complete data processing pipeline with three core capabilities:
+The Pandas-MCP Server is designed as a **Model Context Protocol (MCP) server** that provides LLMs with powerful data processing capabilities. MCP is a standardized protocol that allows AI models to interact with external tools and services in a secure, structured way.
 
-1. **Metadata Reading** - Extract structured metadata from Excel/CSV files
-2. **Pandas Execution** - Process and analyze data with security checks
-3. **Chart Generation** - Create interactive visualizations with Chart.js
+### What is MCP?
+Model Context Protocol (MCP) is an open standard that enables secure, structured communication between AI models and external tools. It provides:
+- **Standardized tool interfaces** for consistent AI interactions
+- **Security boundaries** to prevent unauthorized operations
+- **Structured data exchange** with type safety
+- **Extensible architecture** for custom tool development
 
-## 🚀 Core Features
+### Why Use This MCP Server?
+- **Secure Data Processing**: Execute pandas operations with built-in security checks
+- **Structured Metadata**: Extract comprehensive file information in standardized format
+- **Interactive Visualizations**: Generate Chart.js visualizations directly from data
+- **Memory Optimized**: Handle large datasets efficiently with chunked processing
+- **LLM-Ready**: Designed specifically for AI model integration
 
-### MCP Server Tools
+## 🔧 MCP Configuration
+
+### Claude Desktop Configuration
+Add this configuration to your Claude Desktop settings:
+
+```json
+{
+  "mcpServers": {
+    "pandas-server": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["C:\\Project\\Project\\pandas-mcp-server\\server.py"]
+    }
+  }
+}
+```
+
+### Configuration File Location
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+### Verification
+After configuration, restart Claude Desktop. The server should appear in the MCP tools list with three available tools:
+- `read_metadata` - File analysis
+- `run_pandas_code` - Code execution  
+- `generate_chartjs` - Chart generation
+
+## 🚀 MCP Server Tools
+
 The server exposes three main tools for LLM integration:
 
-#### 1. `read_metadata` - File Analysis
+### 1. `read_metadata` - File Analysis
 Extract comprehensive metadata from Excel and CSV files including:
 - File type, size, encoding, and structure
 - Column names, data types, and sample values
@@ -23,22 +60,94 @@ Extract comprehensive metadata from Excel and CSV files including:
 - Data quality warnings and suggested operations
 - Memory-optimized processing for large files
 
-#### 2. `run_pandas_code` - Secure Code Execution
+**MCP Tool Usage:**
+```json
+{
+  "tool": "read_metadata",
+  "args": {
+    "file_path": "/path/to/sales_data.xlsx"
+  }
+}
+```
+
+### 2. `run_pandas_code` - Secure Code Execution
 Execute pandas operations with:
 - Security filtering against malicious code
 - Memory optimization for large datasets
 - Comprehensive error handling and debugging
 - Support for DataFrame, Series, and dictionary results
 
-#### 3. `generate_chartjs` - Interactive Visualizations
+**MCP Tool Usage:**
+```json
+{
+  "tool": "run_pandas_code",
+  "args": {
+    "code": "import pandas as pd\ndf = pd.read_excel('/path/to/data.xlsx')\nresult = df.groupby('Region')['Sales'].sum()"
+  }
+}
+```
+
+### 3. `generate_chartjs` - Interactive Visualizations
 Generate interactive charts with Chart.js:
 - **Bar charts** - For categorical comparisons
 - **Line charts** - For trend analysis
 - **Pie charts** - For proportional data
 - Interactive HTML templates with customization controls
 
-### User-Friendly CLI Interface
-The `cli.py` provides both interactive and command-line modes:
+**MCP Tool Usage:**
+```json
+{
+  "tool": "generate_chartjs",
+  "args": {
+    "data": {
+      "columns": [
+        {
+          "name": "Region",
+          "type": "string",
+          "examples": ["North", "South", "East", "West"]
+        },
+        {
+          "name": "Sales",
+          "type": "number",
+          "examples": [15000, 12000, 18000, 9000]
+        }
+      ]
+    },
+    "chart_types": ["bar"],
+    "title": "Sales by Region"
+  }
+}
+```
+
+## 🛠️ Installation
+
+### Prerequisites
+- Python 3.8+
+- pip package manager
+
+### Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### Dependencies
+- **pandas>=2.0.0** - Data manipulation and analysis
+- **fastmcp>=1.0.0** - MCP server framework
+- **chardet>=5.0.0** - Character encoding detection
+- **psutil** - System monitoring for memory optimization
+
+## 🚀 Usage
+
+### Starting the MCP Server
+```bash
+python server.py
+```
+
+The server will start and expose the three main tools to connected LLMs via the MCP protocol.
+
+### CLI Interface (Testing & Development)
+
+The `cli.py` provides a convenient command-line interface for testing the MCP server functionality without requiring an MCP client:
 
 #### Interactive Mode
 ```bash
@@ -66,8 +175,8 @@ python cli.py chart data.json --type bar --title "Sales Analysis"
 
 ```
 pandas-mcp-server/
-├── cli.py                    # Command-line interface
 ├── server.py                 # MCP server implementation
+├── cli.py                    # CLI interface for testing
 ├── requirements.txt          # Python dependencies
 ├── core/                     # Core functionality
 │   ├── config.py            # Configuration and constants
@@ -85,102 +194,6 @@ pandas-mcp-server/
 ├── charts/                  # Generated chart files
 ├── logs/                    # Application logs
 └── tests/                   # Test files
-```
-
-## 🛠️ Installation
-
-### Prerequisites
-- Python 3.8+
-- pip package manager
-
-### Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### Dependencies
-- **pandas>=2.0.0** - Data manipulation and analysis
-- **fastmcp>=1.0.0** - MCP server framework
-- **chardet>=5.0.0** - Character encoding detection
-- **psutil** - System monitoring for memory optimization
-
-## 🚀 Usage
-
-### Starting the MCP Server
-```bash
-python server.py
-```
-
-The server will start and expose the three main tools to connected LLMs.
-
-### Using the CLI
-
-#### Interactive Mode
-```bash
-python cli.py
-```
-
-#### Direct Commands
-```bash
-# Read file metadata
-python cli.py metadata /path/to/data.xlsx
-
-# Execute pandas script
-python cli.py execute /path/to/analysis.py
-
-# Generate visualization
-python cli.py chart /path/to/data.json --type line --title "Revenue Trends"
-```
-
-### MCP Tool Usage Examples
-
-#### Reading File Metadata
-```python
-{
-  "tool": "read_metadata",
-  "args": {
-    "file_path": "/path/to/sales_data.xlsx"
-  }
-}
-```
-
-#### Executing Pandas Code
-```python
-{
-  "tool": "run_pandas_code",
-  "args": {
-    "code": """
-import pandas as pd
-df = pd.read_excel('/path/to/sales_data.xlsx')
-result = df.groupby('Region')['Sales'].sum()
-"""
-  }
-}
-```
-
-#### Generating Charts
-```python
-{
-  "tool": "generate_chartjs",
-  "args": {
-    "data": {
-      "columns": [
-        {
-          "name": "Region",
-          "type": "string",
-          "examples": ["North", "South", "East", "West"]
-        },
-        {
-          "name": "Sales",
-          "type": "number",
-          "examples": [15000, 12000, 18000, 9000]
-        }
-      ]
-    },
-    "chart_types": ["bar"],
-    "title": "Sales by Region"
-  }
-}
 ```
 
 ## 🔧 Configuration
@@ -268,6 +281,12 @@ python test_generate_pyecharts.py
 ## 🐛 Troubleshooting
 
 ### Common Issues
+
+#### MCP Connection Issues
+- Verify server path in Claude Desktop configuration
+- Check Python environment and dependencies
+- Ensure server.py is executable
+- Review MCP server logs for connection errors
 
 #### File Not Found
 - Verify file path is absolute
