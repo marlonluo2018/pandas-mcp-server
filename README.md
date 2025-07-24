@@ -20,7 +20,38 @@ Model Context Protocol (MCP) is an open standard that enables secure, structured
 - **Memory Optimized**: Handle large datasets efficiently with chunked processing
 - **LLM-Ready**: Designed specifically for AI model integration
 
-## 🔧 MCP Configuration
+## �️ Installation
+
+### Prerequisites
+- Python 3.8+
+- pip package manager
+- Git (for cloning the repository)
+
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/your-username/pandas-mcp-server.git
+cd pandas-mcp-server
+```
+
+### Step 2: Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### Step 3: Verify Installation
+```bash
+# Test the CLI interface
+python cli.py
+
+# Or test the MCP server directly
+python server.py
+```
+
+### Dependencies
+- **pandas>=2.0.0** - Data manipulation and analysis
+- **fastmcp>=1.0.0** - MCP server framework
+- **chardet>=5.0.0** - Character encoding detection
+- **psutil** - System monitoring for memory optimization
 
 ### Claude Desktop Configuration
 Add this configuration to your Claude Desktop settings:
@@ -31,10 +62,17 @@ Add this configuration to your Claude Desktop settings:
     "pandas-server": {
       "type": "stdio",
       "command": "python",
-      "args": ["C:\\Project\\Project\\pandas-mcp-server\\server.py"]
+      "args": ["/path/to/your/pandas-mcp-server/server.py"]
     }
   }
 }
+```
+
+**Note**: Replace `/path/to/your/pandas-mcp-server/server.py` with the actual path where you cloned the repository.
+
+**Example paths:**
+- Windows: `"C:\\Users\\YourName\\pandas-mcp-server\\server.py"`
+- macOS/Linux: `"/home/username/pandas-mcp-server/server.py"`
 ```
 
 ### Configuration File Location
@@ -118,23 +156,6 @@ Generate interactive charts with Chart.js:
   }
 }
 ```
-
-## 🛠️ Installation
-
-### Prerequisites
-- Python 3.8+
-- pip package manager
-
-### Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### Dependencies
-- **pandas>=2.0.0** - Data manipulation and analysis
-- **fastmcp>=1.0.0** - MCP server framework
-- **chardet>=5.0.0** - Character encoding detection
-- **psutil** - System monitoring for memory optimization
 
 ## 🚀 Usage
 
