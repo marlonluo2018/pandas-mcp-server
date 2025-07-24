@@ -29,7 +29,7 @@ Model Context Protocol (MCP) is an open standard that enables secure, structured
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/your-username/pandas-mcp-server.git
+git clone https://github.com/marlonluo2018/pandas-mcp-server
 cd pandas-mcp-server
 ```
 
