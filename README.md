@@ -170,13 +170,6 @@ Generate interactive charts with Chart.js:
 
 ## 🚀 Usage
 
-### Starting the MCP Server
-```bash
-python server.py
-```
-
-The server will start and expose the three main tools to connected LLMs via the MCP protocol.
-
 ### CLI Interface (Testing & Development)
 
 The `cli.py` provides a convenient command-line interface for testing the MCP server functionality without requiring an MCP client:
