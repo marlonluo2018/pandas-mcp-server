@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Line Chart - Chart.js</title>
+    <title>/*HTML_TITLE_PLACEHOLDER*/</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
@@ -95,7 +95,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Interactive Sales Trend Dashboard</h1>
+        <h1>/*HTML_TITLE_PLACEHOLDER*/</h1>
         
         <!-- Control Panel -->
         <div class="controls">
@@ -148,42 +148,8 @@
     </div>
 
     <script>
-        // Initial data
-        const data = {
-            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-            datasets: [
-                {
-                    label: "Electronics",
-                    data: [6500, 5900, 8000, 8100, 8600, 8250, 9500, 10500, 12000, 11500, 13000, 15000],
-                    borderColor: "#4e73df",
-                    backgroundColor: "#4e73df",
-                    borderWidth: 2,
-                    pointRadius: 5,
-                    tension: 0,
-                    fill: false
-                },
-                {
-                    label: "Clothing",
-                    data: [12000, 11000, 12500, 10500, 11500, 13000, 14000, 12500, 11000, 9500, 10000, 12000],
-                    borderColor: "#1cc88a",
-                    backgroundColor: "#1cc88a",
-                    borderWidth: 2,
-                    pointRadius: 5,
-                    tension: 0,
-                    fill: false
-                },
-                {
-                    label: "Home Goods",
-                    data: [8000, 8500, 9000, 9500, 10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500],
-                    borderColor: "#36b9cc",
-                    backgroundColor: "#36b9cc",
-                    borderWidth: 2,
-                    pointRadius: 5,
-                    tension: 0,
-                    fill: false
-                }
-            ]
-        };
+        // Chart data - dynamically generated
+        const data = /*DATA_PLACEHOLDER*/{}/*DATA_PLACEHOLDER*/;
 
         // Create chart
         let myChart;
@@ -205,24 +171,20 @@
                         },
                         title: { 
                             display: true,
-                            text: 'Monthly Sales Trend (2023)',
+                            text: /*JS_TITLE_PLACEHOLDER*/''/*JS_TITLE_PLACEHOLDER*/,
                             font: { size: 16 }
                         },
                         datalabels: {
                             display: false,
                             anchor: 'end',
                             align: 'top',
-                            formatter: (value) => '$' + value.toLocaleString(),
                             color: '#333',
                             font: { weight: 'bold' }
                         }
                     },
                     scales: {
                         y: {
-                            min: parseInt(document.getElementById('yAxisMin').value),
-                            ticks: {
-                                callback: (value) => '$' + value.toLocaleString()
-                            }
+                            min: parseInt(document.getElementById('yAxisMin').value)
                         }
                     },
                     interaction: {

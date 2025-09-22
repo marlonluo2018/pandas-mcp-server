@@ -56,7 +56,7 @@ def generate_chartjs(
         if data['columns']:
             print(f"DEBUG - First column type: {type(data['columns'][0])}")
 
-        result = generator.generate(data)
+        result = generator.generate(data, **options)
         return result
 
     except Exception as e:

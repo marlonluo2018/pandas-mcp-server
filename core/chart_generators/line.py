@@ -47,6 +47,7 @@ class LineChartGenerator(ChartGenerator):
                     'backgroundColor': self.default_colors[i % len(self.default_colors)],
                     'borderColor': self.default_colors[i % len(self.default_colors)].replace('0.7', '1'),
                     'borderWidth': 2,
+                    'pointRadius': 5,
                     'tension': 0.4,
                     'fill': False
                 })
@@ -59,6 +60,7 @@ class LineChartGenerator(ChartGenerator):
             },
             'options': {
                 'responsive': True,
+                'maintainAspectRatio': False,
                 'scales': {
                     'y': {
                         'beginAtZero': True
@@ -70,6 +72,7 @@ class LineChartGenerator(ChartGenerator):
                         'text': options.get('title', 'Line Chart')
                     },
                     'datalabels': {
+                        'display': False,
                         'anchor': 'end',
                         'align': 'top'
                     }
@@ -79,6 +82,10 @@ class LineChartGenerator(ChartGenerator):
                         'tension': 0.4,
                         'stepped': False
                     }
+                },
+                'interaction': {
+                    'intersect': False,
+                    'mode': 'index'
                 }
             }
         }

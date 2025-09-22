@@ -35,7 +35,8 @@ def run_pandas_code_cli(script_path: str) -> None:
 def generate_chart_cli(
     data_path: str,
     chart_type: str = "bar",
-    title: str = "Data Visualization"
+    title: str = "Data Visualization",
+    output_path: str = None
 ) -> None:
     """CLI wrapper for generate_chartjs functionality."""
     with open(data_path, 'r') as f:
