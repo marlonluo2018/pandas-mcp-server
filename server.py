@@ -129,6 +129,19 @@ def run_pandas_code_tool(code: str) -> dict:
         
     Returns:
         dict: Either the result or error information
+        
+    Forbidden Operations:
+        The following operations are blocked for security reasons:
+        - 'os.', 'sys.', 'subprocess.' - System access operations
+        - 'open(', 'exec(', 'eval(' - Code execution functions
+        - 'import os', 'import sys' - Specific dangerous imports
+        - 'document.', 'window.', 'XMLHttpRequest' - Browser/DOM access
+        - 'fetch(', 'eval(', 'Function(' - JavaScript/remote operations
+        - 'script', 'javascript:' - Script injection attempts
+        
+    Requirements:
+        - Must assign final result to 'result' variable
+        - Code should contain necessary imports (pandas available as 'pd')
     """
     return run_pandas_code(code)
 
