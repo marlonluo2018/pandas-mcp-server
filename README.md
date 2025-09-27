@@ -126,6 +126,20 @@ Execute pandas operations with:
 - Comprehensive error handling and debugging
 - Support for DataFrame, Series, and dictionary results
 
+#### Forbidden Operations
+The following operations are blocked for security reasons:
+- **System Access**: `os.`, `sys.`, `subprocess.` - Prevents file system and system access
+- **Code Execution**: `open()`, `exec()`, `eval()` - Blocks dynamic code execution
+- **Dangerous Imports**: `import os`, `import sys` - Prevents specific harmful imports
+- **Browser/DOM Access**: `document.`, `window.`, `XMLHttpRequest` - Blocks browser operations
+- **JavaScript/Remote**: `fetch()`, `eval()`, `Function()` - Prevents remote code execution
+- **Script Injection**: `script`, `javascript:` - Blocks script injection attempts
+
+**Requirements:**
+- Final result must be assigned to `result` variable
+- Code should include necessary imports (pandas available as `pd`)
+- All code goes through security filtering before execution
+
 **MCP Tool Usage:**
 ```json
 {
