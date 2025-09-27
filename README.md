@@ -16,7 +16,7 @@ The Pandas-MCP Server is designed as a **Model Context Protocol (MCP) server** t
 
 ### Step 1: Clone the Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/marlonluo2018/pandas-mcp-server.git
 cd pandas-mcp-server
 ```
 
