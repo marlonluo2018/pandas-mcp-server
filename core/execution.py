@@ -7,6 +7,35 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def get_forbidden_reason(forbidden_op: str) -> str:
+    """Get the reason why an operation is forbidden.
+    
+    Args:
+        forbidden_op: The forbidden operation string
+        
+    Returns:
+        str: Reason why the operation is forbidden
+    """
+    reason_map = {
+        'os.': 'Operating system access can compromise file system security',
+        'sys.': 'System module access can allow unsafe system operations',
+        'subprocess.': 'Subprocess execution can run arbitrary commands',
+        'open(': 'Direct file access bypasses pandas security controls',
+        'exec(': 'Dynamic code execution can run arbitrary code',
+        'eval(': 'Dynamic evaluation can execute arbitrary expressions',
+        'import os': 'Direct OS module import bypasses security controls',
+        'import sys': 'Direct system module import bypasses security controls',
+        'document.': 'DOM access is not relevant for pandas data analysis',
+        'window.': 'Browser window access is not relevant for pandas data analysis',
+        'XMLHttpRequest': 'Network requests are not relevant for pandas data analysis',
+        'fetch(': 'Network requests are not relevant for pandas data analysis',
+        'Function(': 'Dynamic function creation can execute arbitrary code',
+        'script': 'Script tags are not relevant for pandas data analysis',
+        'javascript:': 'JavaScript execution is not relevant for pandas data analysis'
+    }
+    
+    return reason_map.get(forbidden_op, 'This operation is forbidden for security reasons')
+
 def run_pandas_code(code: str) -> dict:
     """Execute pandas code with smart suggestions and security checks.
     
@@ -35,12 +64,33 @@ def run_pandas_code(code: str) -> dict:
     # Security checks
     for forbidden in BLACKLIST:
         if forbidden in code:
+            # Find the line number where the forbidden operation occurs
+            lines = code.split('\n')
+            forbidden_lines = []
+            for i, line in enumerate(lines, 1):
+                if forbidden in line:
+                    forbidden_lines.append(f"Line {i}: {line.strip()}")
+            
+            # Create detailed error message
+            error_details = {
+                "forbidden_operation": forbidden,
+                "reason": get_forbidden_reason(forbidden),
+                "locations": forbidden_lines,
+                "all_forbidden_operations": BLACKLIST,
+                "suggestion": "Remove or replace the forbidden operation from your code"
+            }
+            
+            logger.warning(f"Security violation: {forbidden} found in code")
+            for line in forbidden_lines:
+                logger.warning(f"  {line}")
+            
             return {
-                "error": {
-                    "type": "SECURITY_VIOLATION",
-                    "message": f"Forbidden operation detected: {forbidden}",
-                    "solution": "Remove restricted operations from your code"
-                }
+                "content": [],
+                "isError": True,
+                "error_type": "SECURITY_VIOLATION",
+                "message": f"Forbidden operation detected: {forbidden}",
+                "details": error_details,
+                "solution": f"Remove '{forbidden}' from your code. Use pandas operations instead."
             }
 
     # Prepare execution environment with memory optimizations
