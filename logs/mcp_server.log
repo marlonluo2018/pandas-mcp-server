@@ -129,3 +129,11 @@
 2025-09-29 14:32:17,868 - metadata - INFO - Processing CSV file
 2025-09-29 14:32:18,012 - memory_usage - INFO - Final memory usage: 103.1MB
 2025-09-29 14:32:18,012 - metadata - INFO - Metadata processing complete
+2025-09-29 14:38:42,871 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Loreal Certification Drive list.xlsx
+2025-09-29 14:38:42,871 - metadata - INFO - Processing Excel file
+2025-09-29 14:38:44,501 - memory_usage - INFO - Final memory usage: 123.2MB
+2025-09-29 14:38:44,501 - metadata - INFO - Metadata processing complete
+2025-09-29 14:38:46,015 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-09-26.csv
+2025-09-29 14:38:46,017 - metadata - INFO - Processing CSV file
+2025-09-29 14:38:46,575 - memory_usage - INFO - Final memory usage: 124.1MB
+2025-09-29 14:38:46,575 - metadata - INFO - Metadata processing complete
