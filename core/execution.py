@@ -76,8 +76,7 @@ def run_pandas_code(code: str) -> dict:
                 "forbidden_operation": forbidden,
                 "reason": get_forbidden_reason(forbidden),
                 "locations": forbidden_lines,
-                "all_forbidden_operations": BLACKLIST,
-                "suggestion": "Remove or replace the forbidden operation from your code"
+                "all_forbidden_operations": BLACKLIST
             }
             
             logger.warning(f"Security violation: {forbidden} found in code")
