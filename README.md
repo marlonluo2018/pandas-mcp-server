@@ -518,8 +518,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Check our [FAQ](docs/faq.md) page for answers to common questions.
 
 ### Contact Information
-- Email: [marlonluo2018@gmail.com](mailto:marlonluo2018@gmail.com)
-- Twitter: [@marlonluo2018](https://twitter.com/marlonluo2018)
+- Email: [marlonluo2018@foxmail.com](mailto:marlonluo2018@foxmail.com)
 
 ---
 
