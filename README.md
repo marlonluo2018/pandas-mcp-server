@@ -183,6 +183,12 @@ Generate interactive charts with Chart.js:
 - **Pie charts** - For proportional data
 - Interactive HTML templates with customization controls
 
+#### Chart Output
+- **File Format**: All charts are generated as standalone HTML files
+- **Save Location**: Charts are saved in the `./charts/` directory by default
+- **File Naming**: Files are automatically named with timestamp and chart type (e.g., `bar_chart_20250710_143022.html`)
+- **Accessibility**: HTML files can be opened in any web browser and shared easily
+
 **MCP Tool Usage:**
 ```json
 {
@@ -235,6 +241,14 @@ python cli.py execute analysis.py
 # Generate charts
 python cli.py chart data.json --type bar --title "Sales Analysis"
 ```
+
+#### Chart Output Information
+When generating charts using the CLI:
+- **Output Format**: Charts are saved as interactive HTML files
+- **Default Location**: All charts are saved in the `./charts/` directory
+- **File Naming**: Automatic naming with timestamp and chart type
+- **Viewing Charts**: Open the HTML files in any web browser to view interactive visualizations
+- **Sharing**: HTML files can be easily shared with others
 
 ## 🔍 Code Logic & Architecture
 
