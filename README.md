@@ -1,6 +1,32 @@
 # Pandas-MCP Server
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![GitHub stars](https://img.shields.io/github/stars/marlonluo2018/pandas-mcp-server?style=social)](https://github.com/marlonluo2018/pandas-mcp-server)
+
+<div align="center">
+
+**🚀 Powerful tool for AI-powered data analysis - Through MCP protocol, enables LLMs to safely and efficiently execute pandas code and generate visualizations**
+
+[![GitHub stars](https://img.shields.io/github/stars/marlonluo2018/pandas-mcp-server?style=for-the-badge&logo=github&label=Star%20this%20project)](https://github.com/marlonluo2018/pandas-mcp-server/stargazers)
+
+*If you find this project helpful, please consider giving it a ⭐️ star!*
+
+</div>
+
+---
+
 A comprehensive Model Context Protocol (MCP) server that enables LLMs to execute pandas code through a standardized workflow for data analysis and visualization.
+
+## ✨ Key Features
+
+- 🔒 **Secure Execution Environment** - Sandboxed code execution prevents malicious operations and protects system security
+- 📊 **Intelligent Data Analysis** - Automatically extracts file metadata, understands data structure, and provides intelligent analysis suggestions
+- 🎨 **Interactive Visualizations** - One-click generation of various interactive charts with real-time parameter adjustment
+- 🧠 **Memory Optimization** - Intelligent memory management supports large file processing with automatic data type optimization
+- 🔧 **Easy Integration** - Simple configuration for seamless integration with AI assistants like Claude Desktop
+- 📝 **CLI Support** - Provides command-line interface for convenient testing and development
 
 ## 🎯 MCP Server Overview
 
@@ -437,25 +463,55 @@ export LOG_LEVEL=DEBUG
 python server.py
 ```
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
-
 ## 📄 Additional Documentation
 
 - **CSV Metadata Format**: See `csv_metadata_format.md` for detailed CSV processing documentation
+- **API Documentation**: Check our [API documentation](docs/api.md) for detailed usage instructions
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
-For issues and questions:
-- Check the troubleshooting section
-- Review log files in the `logs/` directory
-- Open an issue on GitHub with reproduction steps
+### Getting Help
+- **Report Issues**: Submit an [issue](https://github.com/marlonluo2018/pandas-mcp-server/issues) on GitHub
+- **Discussions**: Join our [GitHub Discussions](https://github.com/marlonluo2018/pandas-mcp-server/discussions)
+
+### Frequently Asked Questions
+Check our [FAQ](docs/faq.md) page for answers to common questions.
+
+### Contact Information
+- Email: [marlonluo2018@gmail.com](mailto:marlonluo2018@gmail.com)
+- Twitter: [@marlonluo2018](https://twitter.com/marlonluo2018)
+
+---
+
+## 🌟 Show Your Support
+
+If you find this project useful, please consider giving it a ⭐️ star on GitHub! Your support helps us:
+
+- Increase project visibility
+- Attract more users
+- Motivate continued development
+- Build a stronger community
+
+[![GitHub stars](https://img.shields.io/github/stars/marlonluo2018/pandas-mcp-server?style=for-the-badge&logo=github&label=Star%20this%20project)](https://github.com/marlonluo2018/pandas-mcp-server/stargazers)
+
+---
+
+## 📊 Project Statistics
+
+[![GitHub issues](https://img.shields.io/github/issues/marlonluo2018/pandas-mcp-server)](https://github.com/marlonluo2018/pandas-mcp-server/issues)
+[![GitHub forks](https://img.shields.io/github/forks/marlonluo2018/pandas-mcp-server)](https://github.com/marlonluo2018/pandas-mcp-server/network)
+[![GitHub stars](https://img.shields.io/github/stars/marlonluo2018/pandas-mcp-server)](https://github.com/marlonluo2018/pandas-mcp-server/stargazers)
+
+---
+
+<div align="center">
+
+**Thank you for your support! Please give us a ⭐️ Star if you find this project helpful!**
+
+[🔝 Back to top](#pandas-mcp-server)
+
+</div>
