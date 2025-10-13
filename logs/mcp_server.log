@@ -165,3 +165,41 @@
 2025-10-13 19:23:51,874 - metadata - INFO - Processing CSV file for column analysis
 2025-10-13 19:32:30,766 - metadata - INFO - Starting column value analysis for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
 2025-10-13 19:32:30,766 - metadata - INFO - Processing CSV file for column analysis
+2025-10-13 19:49:49,966 - metadata - INFO - Starting column value analysis for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
+2025-10-13 19:49:49,966 - metadata - INFO - Processing CSV file for column analysis
+2025-10-13 19:51:03,233 - metadata - INFO - Starting column value analysis for file: /mnt/data/credentials_dataset.csv
+2025-10-13 19:51:43,919 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
+2025-10-13 19:51:43,920 - metadata - INFO - Processing CSV file
+2025-10-13 19:51:44,028 - memory_usage - INFO - Final memory usage: 116.0MB
+2025-10-13 19:51:44,028 - metadata - INFO - Metadata processing complete
+2025-10-13 19:51:47,516 - metadata - INFO - Starting column value analysis for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
+2025-10-13 19:51:47,516 - metadata - INFO - Processing CSV file for column analysis
+2025-10-13 19:52:42,889 - metadata - INFO - Starting column value analysis for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
+2025-10-13 19:52:42,889 - metadata - INFO - Processing CSV file for column analysis
+2025-10-13 19:54:08,267 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
+2025-10-13 19:54:08,267 - metadata - INFO - Processing CSV file
+2025-10-13 19:54:08,352 - memory_usage - INFO - Final memory usage: 115.5MB
+2025-10-13 19:54:08,353 - metadata - INFO - Metadata processing complete
+2025-10-13 19:54:17,491 - metadata - INFO - Starting column value analysis for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
+2025-10-13 19:54:17,491 - metadata - INFO - Processing CSV file for column analysis
+2025-10-13 19:55:03,648 - metadata - INFO - Starting column value analysis for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
+2025-10-13 19:55:03,648 - metadata - INFO - Processing CSV file for column analysis
+2025-10-13 19:55:08,682 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
+2025-10-13 19:55:08,683 - metadata - INFO - Processing CSV file
+2025-10-13 19:55:08,779 - memory_usage - INFO - Final memory usage: 115.8MB
+2025-10-13 19:55:08,779 - metadata - INFO - Metadata processing complete
+2025-10-13 19:56:31,403 - metadata - INFO - Starting metadata processing for file: /tmp/data.csv
+2025-10-13 19:56:31,403 - memory_usage - INFO - Final memory usage: 116.0MB
+2025-10-13 19:56:31,404 - metadata - INFO - Metadata processing complete
+2025-10-13 19:56:45,838 - metadata - INFO - Starting column value analysis for file: data.csv
+2025-10-13 19:56:50,747 - metadata - INFO - Starting metadata processing for file: certification_data.csv
+2025-10-13 19:56:50,747 - memory_usage - INFO - Final memory usage: 116.0MB
+2025-10-13 19:56:50,747 - metadata - INFO - Metadata processing complete
+2025-10-13 19:57:12,368 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
+2025-10-13 19:57:12,368 - metadata - INFO - Processing CSV file
+2025-10-13 19:57:12,457 - memory_usage - INFO - Final memory usage: 116.1MB
+2025-10-13 19:57:12,457 - metadata - INFO - Metadata processing complete
+2025-10-13 19:59:16,630 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-10 (2).csv
+2025-10-13 19:59:16,631 - metadata - INFO - Processing CSV file
+2025-10-13 19:59:16,750 - memory_usage - INFO - Final memory usage: 116.7MB
+2025-10-13 19:59:16,750 - metadata - INFO - Metadata processing complete

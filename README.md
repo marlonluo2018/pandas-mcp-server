@@ -114,7 +114,7 @@ The pandas MCP server follows a structured workflow for data analysis and visual
 - Extract all unique values from important columns
 - Identify patterns in categorical data
 - Understand the meaning behind codes or abbreviations
-- **Key Purpose**: Complement metadata by providing deep understanding of column values, which helps LLM generate more accurate and effective pandas code in the next step
+- **Key Purpose**: Complement metadata by providing deep understanding of column values, which helps LLM generate more accurate and effective pandas code in the next step, especially when working with multiple CSV files
 
 ### Step 3: Execute Pandas Operations
 **LLM calls `run_pandas_code_tool`** based on metadata and column analysis:
@@ -143,8 +143,9 @@ The `interpret_column_data` function is designed to complement the `read_metadat
   - Reveals all unique values and their frequencies
   - Helps LLM understand categorical data patterns
   - Enables more precise filtering and grouping operations
+  - Particularly valuable when working with multiple CSV files where consistent value understanding across datasets is crucial
 
-This two-step approach ensures that LLM has both structural and value-level understanding before generating pandas code, resulting in more accurate and effective data analysis operations.
+This two-step approach ensures that LLM has both structural and value-level understanding before generating pandas code, resulting in more accurate and effective data analysis operations, especially when processing multiple CSV files.
 
 ## 🚀 MCP Server Tools
 
@@ -177,7 +178,7 @@ Interpret specific columns to understand their value patterns:
 - Automatic pattern recognition for common data types
 - Complete value distribution without sampling
 
-**Purpose**: Complements `read_metadata_tool` by providing deep insights into column values, enabling LLM to generate more precise filtering, grouping, and analysis operations.
+**Purpose**: Complements `read_metadata_tool` by providing deep insights into column values, enabling LLM to generate more precise filtering, grouping, and analysis operations, especially when working with multiple CSV files that require consistent value understanding across datasets.
 
 **MCP Tool Usage:**
 ```json
@@ -197,7 +198,7 @@ Execute pandas operations with:
 - Comprehensive error handling and debugging
 - Support for DataFrame, Series, and dictionary results
 
-**Purpose**: Leverages insights from both `read_metadata_tool` and `interpret_column_data` to execute precise data analysis operations.
+**Purpose**: Leverages insights from both `read_metadata_tool` and `interpret_column_data` to execute precise data analysis operations, particularly valuable when processing multiple CSV files with consistent value patterns.
 
 #### Forbidden Operations
 The following operations are blocked for security reasons:
@@ -329,7 +330,7 @@ Launches a guided menu system with:
 # Read metadata
 python cli.py metadata data.xlsx
 
-# Interpret column values
+# Interpret column values (useful for multiple CSV files)
 python cli.py interpret data.csv --columns "Region,Status"
 
 # Execute pandas code
@@ -403,12 +404,14 @@ When generating charts using the CLI:
 - Unique value extraction with exact counts
 - Data type identification and quality metrics
 - Multi-column processing in a single request
+- Particularly valuable when working with multiple CSV files to ensure consistent value understanding across datasets
 
 **Key Features:**
 - Value frequency sorting (descending order)
 - Null value detection and reporting
 - Memory-optimized processing for large datasets
 - Support for categorical and numerical data
+- Enables consistent data analysis across multiple CSV files
 
 #### 6. Chart Generators (`core/chart_generators/`)
 **Base Class (`base.py`):**
