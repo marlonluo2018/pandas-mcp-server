@@ -11,6 +11,18 @@ logger = logging.getLogger('metadata')
 def interpret_column_values(file_path: str, column_names: list) -> dict:
     """Interpret column values in a data file and return their unique values.
     
+    This function is most valuable for categorical fields with limited unique values,
+    code fields that need interpretation, and fields with abbreviations or cryptic values.
+    
+    When to use this function:
+    - HIGH VALUE: Categorical fields (Region, Status, Category)
+    - HIGH VALUE: Code fields (StatusCode "A", "B", "C")
+    - HIGH VALUE: Fields with abbreviations or cryptic values
+    - LOW VALUE: ID fields (usually unique values with no patterns)
+    - LOW VALUE: Email fields (typically unique identifiers)
+    - LOW VALUE: Numeric percentage fields (already self-explanatory)
+    - CONDITIONAL: Time fields (useful for non-standard formats or categorical time)
+    
     Args:
         file_path: Path to the data file
         column_names: List of column names to interpret

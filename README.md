@@ -117,6 +117,15 @@ The pandas MCP server follows a structured workflow for data analysis and visual
 - Understand the meaning behind codes or abbreviations
 - **Key Purpose**: Complement metadata by providing deep understanding of column values, which helps LLM generate more accurate and effective pandas code in the next step, especially when working with multiple CSV files
 
+**When to Use interpret_column_data:**
+- **High Value**: Categorical fields with limited unique values (Region, Status, Category)
+- **High Value**: Code fields that need interpretation (StatusCode "A", "B", "C")
+- **High Value**: Fields with abbreviations or cryptic values
+- **Low Value**: ID fields (usually unique values with no patterns)
+- **Low Value**: Email fields (typically unique identifiers)
+- **Low Value**: Numeric percentage fields (already self-explanatory)
+- **Conditional**: Time fields (useful for non-standard formats or categorical time)
+
 ### Step 3: Execute Pandas Operations
 **LLM calls `run_pandas_code_tool`** based on metadata and column analysis:
 - Formulate pandas operations using the understood file structure
@@ -180,6 +189,12 @@ Interpret specific columns to understand their value patterns:
 - Complete value distribution without sampling
 
 **Purpose**: Complements `read_metadata_tool` by providing deep insights into column values, enabling LLM to generate more precise filtering, grouping, and analysis operations, especially when working with multiple CSV files that require consistent value understanding across datasets.
+
+**Best Use Cases:**
+- **Most Valuable**: Categorical fields with limited unique values (Region, Status, Category)
+- **Most Valuable**: Code/abbreviation fields that need interpretation (StatusCode "A", "B", "C")
+- **Less Valuable**: ID fields, email fields, or numeric percentage fields
+- **Context-Dependent**: Time fields (useful for non-standard formats)
 
 #### Response Format
 The function returns a structured response with the following format:
