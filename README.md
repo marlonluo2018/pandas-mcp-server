@@ -93,8 +93,9 @@ Add this configuration to your Claude Desktop settings:
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
 ### Verification
-After configuration, restart Claude Desktop. The server should appear in the MCP tools list with three available tools:
+After configuration, restart Claude Desktop. The server should appear in the MCP tools list with four available tools:
 - `read_metadata_tool` - File analysis
+- `interpret_column_data` - Column value interpretation
 - `run_pandas_code_tool` - Code execution  
 - `generate_chartjs_tool` - Chart generation
 
@@ -180,6 +181,35 @@ Interpret specific columns to understand their value patterns:
 
 **Purpose**: Complements `read_metadata_tool` by providing deep insights into column values, enabling LLM to generate more precise filtering, grouping, and analysis operations, especially when working with multiple CSV files that require consistent value understanding across datasets.
 
+#### Response Format
+The function returns a structured response with the following format:
+```json
+{
+  "columns_interpretation": [
+    {
+      "column_name": "Region",
+      "data_type": "object",
+      "total_values": 1000,
+      "null_count": 5,
+      "unique_count": 4,
+      "unique_values_with_counts": [
+        ["North", 350],
+        ["South", 280],
+        ["East", 220],
+        ["West", 145]
+      ]
+    }
+  ]
+}
+```
+
+#### Key Features
+- **Complete Value Distribution**: Returns all unique values with their exact counts
+- **Sorted by Frequency**: Values are sorted in descending order of occurrence
+- **Data Type Analysis**: Identifies the underlying data type (object, int64, etc.)
+- **Quality Metrics**: Provides null count and total values for data quality assessment
+- **Multi-column Support**: Can analyze multiple columns in a single request
+
 **MCP Tool Usage:**
 ```json
 {
@@ -220,53 +250,6 @@ The following operations are blocked for security reasons:
   "tool": "run_pandas_code_tool",
   "args": {
     "code": "import pandas as pd\ndf = pd.read_excel('/path/to/data.xlsx')\nresult = df.groupby('Region')['Sales'].sum()"
-  }
-}
-```
-
-### 3. `interpret_column_data` - Column Value Interpretation
-Interpret specific columns to understand their value patterns:
-- Extract all unique values with their counts from specified columns
-- Support for single or multiple column interpretation
-- Automatic pattern recognition for common data types
-- Complete value distribution without sampling
-
-#### Response Format
-The function returns a structured response with the following format:
-```json
-{
-  "columns_interpretation": [
-    {
-      "column_name": "Region",
-      "data_type": "object",
-      "total_values": 1000,
-      "null_count": 5,
-      "unique_count": 4,
-      "unique_values_with_counts": [
-        ["North", 350],
-        ["South", 280],
-        ["East", 220],
-        ["West", 145]
-      ]
-    }
-  ]
-}
-```
-
-#### Key Features
-- **Complete Value Distribution**: Returns all unique values with their exact counts
-- **Sorted by Frequency**: Values are sorted in descending order of occurrence
-- **Data Type Analysis**: Identifies the underlying data type (object, int64, etc.)
-- **Quality Metrics**: Provides null count and total values for data quality assessment
-- **Multi-column Support**: Can analyze multiple columns in a single request
-
-**MCP Tool Usage:**
-```json
-{
-  "tool": "interpret_column_data",
-  "args": {
-    "file_path": "/path/to/sales_data.csv",
-    "column_names": ["Region", "Status"]
   }
 }
 ```
