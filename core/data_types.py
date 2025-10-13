@@ -5,7 +5,7 @@ def get_descriptive_type(series: pd.Series) -> str:
     """Convert pandas dtype to more descriptive type name.
     
     Args:
-        series: Pandas Series to analyze
+        series: Pandas Series to interpret
         
     Returns:
         str: Descriptive type name like 'string', 'date', 'number', etc.

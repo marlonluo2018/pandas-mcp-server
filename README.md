@@ -100,7 +100,7 @@ After configuration, restart Claude Desktop. The server should appear in the MCP
 
 ## 🔄 Workflow
 
-The pandas MCP server follows a structured three-step workflow for data analysis and visualization:
+The pandas MCP server follows a structured workflow for data analysis and visualization:
 
 ### Step 1: Read File Metadata
 **LLM calls `read_metadata_tool`** to understand the file structure:
@@ -109,23 +109,46 @@ The pandas MCP server follows a structured three-step workflow for data analysis
 - Receive data quality warnings and suggested operations
 - Understand the dataset structure before processing
 
-### Step 2: Execute Pandas Operations
-**LLM calls `run_pandas_code_tool`** based on metadata analysis:
+### Step 2: Interpret Column Values (Optional)
+**LLM calls `interpret_column_data`** to understand specific columns:
+- Extract all unique values from important columns
+- Identify patterns in categorical data
+- Understand the meaning behind codes or abbreviations
+- **Key Purpose**: Complement metadata by providing deep understanding of column values, which helps LLM generate more accurate and effective pandas code in the next step
+
+### Step 3: Execute Pandas Operations
+**LLM calls `run_pandas_code_tool`** based on metadata and column analysis:
 - Formulate pandas operations using the understood file structure
 - Execute data processing, filtering, aggregation, or analysis
 - Receive results in DataFrame, Series, or dictionary format
 - Get optimized output with memory management
 
-### Step 3: Generate Visualizations
+### Step 4: Generate Visualizations
 **LLM calls `generate_chartjs_tool`** to create interactive charts:
 - Transform processed data into Chart.js compatible format
 - Generate interactive HTML charts with customization controls
 - Create bar, line, or pie charts based on data characteristics
 - Output responsive visualizations for analysis presentation
 
+### How `interpret_column_data` Complements `read_metadata`
+
+The `interpret_column_data` function is designed to complement the `read_metadata_tool` by providing deeper insights into column values:
+
+- **`read_metadata_tool`**: Focuses on file structure, data types, and statistical summaries
+  - Provides high-level understanding of the dataset
+  - Offers sample values and basic statistics
+  - Helps LLM understand the overall data architecture
+
+- **`interpret_column_data`**: Focuses on detailed value analysis of specific columns
+  - Reveals all unique values and their frequencies
+  - Helps LLM understand categorical data patterns
+  - Enables more precise filtering and grouping operations
+
+This two-step approach ensures that LLM has both structural and value-level understanding before generating pandas code, resulting in more accurate and effective data analysis operations.
+
 ## 🚀 MCP Server Tools
 
-The server exposes three main tools for LLM integration:
+The server exposes four main tools for LLM integration:
 
 ### 1. `read_metadata_tool` - File Analysis
 Extract comprehensive metadata from Excel and CSV files including:
@@ -134,6 +157,8 @@ Extract comprehensive metadata from Excel and CSV files including:
 - Statistical summaries (null counts, unique values, min/max/mean)
 - Data quality warnings and suggested operations
 - Memory-optimized processing for large files
+
+**Purpose**: Provides LLM with a high-level understanding of the data structure and characteristics, serving as the foundation for data analysis.
 
 **MCP Tool Usage:**
 ```json
@@ -145,12 +170,34 @@ Extract comprehensive metadata from Excel and CSV files including:
 }
 ```
 
-### 2. `run_pandas_code_tool` - Secure Code Execution
+### 2. `interpret_column_data` - Column Value Interpretation
+Interpret specific columns to understand their value patterns:
+- Extract all unique values with their counts from specified columns
+- Support for single or multiple column interpretation
+- Automatic pattern recognition for common data types
+- Complete value distribution without sampling
+
+**Purpose**: Complements `read_metadata_tool` by providing deep insights into column values, enabling LLM to generate more precise filtering, grouping, and analysis operations.
+
+**MCP Tool Usage:**
+```json
+{
+  "tool": "interpret_column_data",
+  "args": {
+    "file_path": "/path/to/sales_data.csv",
+    "column_names": ["Region", "Status"]
+  }
+}
+```
+
+### 3. `run_pandas_code_tool` - Secure Code Execution
 Execute pandas operations with:
 - Security filtering against malicious code
 - Memory optimization for large datasets
 - Comprehensive error handling and debugging
 - Support for DataFrame, Series, and dictionary results
+
+**Purpose**: Leverages insights from both `read_metadata_tool` and `interpret_column_data` to execute precise data analysis operations.
 
 #### Forbidden Operations
 The following operations are blocked for security reasons:
@@ -176,7 +223,54 @@ The following operations are blocked for security reasons:
 }
 ```
 
-### 3. `generate_chartjs_tool` - Interactive Visualizations
+### 3. `interpret_column_data` - Column Value Interpretation
+Interpret specific columns to understand their value patterns:
+- Extract all unique values with their counts from specified columns
+- Support for single or multiple column interpretation
+- Automatic pattern recognition for common data types
+- Complete value distribution without sampling
+
+#### Response Format
+The function returns a structured response with the following format:
+```json
+{
+  "columns_interpretation": [
+    {
+      "column_name": "Region",
+      "data_type": "object",
+      "total_values": 1000,
+      "null_count": 5,
+      "unique_count": 4,
+      "unique_values_with_counts": [
+        ["North", 350],
+        ["South", 280],
+        ["East", 220],
+        ["West", 145]
+      ]
+    }
+  ]
+}
+```
+
+#### Key Features
+- **Complete Value Distribution**: Returns all unique values with their exact counts
+- **Sorted by Frequency**: Values are sorted in descending order of occurrence
+- **Data Type Analysis**: Identifies the underlying data type (object, int64, etc.)
+- **Quality Metrics**: Provides null count and total values for data quality assessment
+- **Multi-column Support**: Can analyze multiple columns in a single request
+
+**MCP Tool Usage:**
+```json
+{
+  "tool": "interpret_column_data",
+  "args": {
+    "file_path": "/path/to/sales_data.csv",
+    "column_names": ["Region", "Status"]
+  }
+}
+```
+
+### 4. `generate_chartjs_tool` - Interactive Visualizations
 Generate interactive charts with Chart.js:
 - **Bar charts** - For categorical comparisons
 - **Line charts** - For trend analysis
@@ -235,6 +329,9 @@ Launches a guided menu system with:
 # Read metadata
 python cli.py metadata data.xlsx
 
+# Interpret column values
+python cli.py interpret data.csv --columns "Region,Status"
+
 # Execute pandas code
 python cli.py execute analysis.py
 
@@ -257,7 +354,7 @@ When generating charts using the CLI:
 #### 1. Server Architecture (`server.py`)
 - **FastMCP Integration**: Uses FastMCP framework for MCP protocol implementation
 - **Logging System**: Unified logging with rotation and memory tracking
-- **Tool Registration**: Exposes three main tools with proper error handling
+- **Tool Registration**: Exposes four main tools with proper error handling
 - **Memory Monitoring**: Tracks memory usage before/after operations
 
 #### 2. Metadata Processing (`core/metadata.py`)
@@ -300,7 +397,20 @@ When generating charts using the CLI:
 - **Line Charts**: Trend analysis with line styling options
 - **Pie Charts**: Proportional data with donut hole and percentage display
 
-#### 5. Chart Generators (`core/chart_generators/`)
+#### 5. Column Interpretation (`core/column_interpretation.py`)
+**Functionality:**
+- Complete value distribution analysis for specified columns
+- Unique value extraction with exact counts
+- Data type identification and quality metrics
+- Multi-column processing in a single request
+
+**Key Features:**
+- Value frequency sorting (descending order)
+- Null value detection and reporting
+- Memory-optimized processing for large datasets
+- Support for categorical and numerical data
+
+#### 6. Chart Generators (`core/chart_generators/`)
 **Base Class (`base.py`):**
 - Abstract base class for all chart generators
 - Template management and file I/O
@@ -338,6 +448,7 @@ pandas-mcp-server/
 │   ├── config.py            # Configuration and constants
 │   ├── data_types.py        # Data type utilities
 │   ├── metadata.py          # File metadata extraction
+│   ├── column_interpretation.py   # Column value analysis
 │   ├── execution.py         # Pandas code execution
 │   ├── visualization.py     # Chart generation orchestration
 │   └── chart_generators/    # Chart-specific implementations

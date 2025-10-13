@@ -7,6 +7,7 @@ from core.config import mcp
 from core.metadata import read_metadata
 from core.execution import run_pandas_code
 from core.visualization import generate_chartjs
+from core.column_interpretation import interpret_column_values
 
 def setup_logging():
     """Configure logging with all components writing to a single file"""
@@ -144,6 +145,56 @@ def run_pandas_code_tool(code: str) -> dict:
         - Code should contain necessary imports (pandas available as 'pd')
     """
     return run_pandas_code(code)
+
+@mcp.tool()
+def interpret_column_data(
+    file_path: str,
+    column_names: list
+) -> dict:
+    """Interpret column values and return their unique values.
+    
+    Args:
+        file_path: Absolute path to data file
+        column_names: List of column names to interpret
+        
+    Returns:
+        dict: Structured interpretation including:
+            - status: SUCCESS/ERROR
+            - file_info: Basic file information
+            - columns_interpretation: List of column interpretations with:
+                - column_name: Name of the column
+                - unique_values_with_counts: List of (value, count) tuples
+                - unique_count: Total number of unique values
+                - total_values: Total number of values in the column
+                - null_count: Number of null values
+                - data_type: Type of data in the column
+    """
+    try:
+        logger.info(f"Starting column value analysis for file: {file_path}")
+        import psutil
+        process = psutil.Process()
+        mem_before = process.memory_info().rss / 1024 / 1024  # MB
+        memory_logger = logging.getLogger('memory_usage')
+        memory_logger.debug(f"Memory usage before interpret_column_values: {mem_before:.1f}MB")
+        
+        result = interpret_column_values(file_path, column_names)
+        
+        mem_after = process.memory_info().rss / 1024 / 1024  # MB
+        memory_logger.debug(f"Memory usage after interpret_column_values: {mem_after:.1f}MB")
+        memory_logger.debug(f"Memory change: {mem_after - mem_before:.1f}MB")
+        
+        if result['status'] == 'ERROR':
+            logger.error(f"Column value analysis failed: {result.get('message', 'Unknown error')}")
+        
+        return result
+    except Exception as e:
+        logger.error(f"Unexpected error in interpret_column_data: {str(e)}")
+        logger.debug(traceback.format_exc())
+        return {
+            "status": "ERROR",
+            "error_type": "TOOL_EXECUTION_ERROR",
+            "message": str(e)
+        }
 
 @mcp.tool()
 def generate_chartjs_tool(
