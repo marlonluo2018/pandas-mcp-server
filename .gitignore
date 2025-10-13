@@ -1,24 +1,12 @@
-core/__pycache__/data_types.cpython-311.pyc
-charts/chart_bar_1750415517.html
-charts/chart_bar_1750655343.html
-charts/chart_bar_1751519556.html
-charts/chart_bar_1752026955.html
-charts/chart_bar_1752027261.html
-charts/chart_bar_1752027361.html
-charts/chart_bar_1752027448.html
-charts/chart_bar_1752027540.html
-charts/chart_line_1750415517.html
-charts/chart_line_1751519436.html
-charts/chart_pie_1750415517.html
-charts/chart_bar_1752499473.html
-charts/chart_bar_1752499623.html
-charts/chart_pie_1752499635.html
-core/__pycache__/config.cpython-311.pyc
-core/__pycache__/config.cpython-311.pyc
-core/__pycache__/config.cpython-311.pyc
-core/__pycache__/data_types.cpython-311.pyc
-core/__pycache__/execution.cpython-311.pyc
-core/__pycache__/metadata.cpython-311.pyc
-core/__pycache__/visualization.cpython-311.pyc
-core/chart_generators/__pycache__/__init__.cpython-311.pyc
-core/chart_generators/__pycache__/base.cpython-311.pyc
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Chart files
+charts/chart_bar_*.html
+charts/chart_line_*.html
+charts/chart_pie_*.html
