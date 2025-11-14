@@ -187,6 +187,8 @@ Interpret specific columns to understand their value patterns:
 - Support for single or multiple column interpretation
 - Automatic pattern recognition for common data types
 - Complete value distribution without sampling
+- Support for both CSV (.csv) and Excel (.xlsx, .xls) files
+- Excel worksheet selection capability
 
 **Purpose**: Complements `read_metadata_tool` by providing deep insights into column values, enabling LLM to generate more precise filtering, grouping, and analysis operations, especially when working with multiple CSV files that require consistent value understanding across datasets.
 
@@ -232,6 +234,18 @@ The function returns a structured response with the following format:
   "args": {
     "file_path": "/path/to/sales_data.csv",
     "column_names": ["Region", "Status"]
+  }
+}
+```
+
+**Excel File Usage (with optional sheet selection):**
+```json
+{
+  "tool": "interpret_column_data",
+  "args": {
+    "file_path": "/path/to/sales_data.xlsx",
+    "column_names": ["Region", "Status"],
+    "sheet_name": "Q3_Sales"  // Optional: sheet name or index (default: 0)
   }
 }
 ```

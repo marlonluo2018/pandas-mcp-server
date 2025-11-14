@@ -124,7 +124,8 @@ def read_metadata_tool(file_path: str) -> dict:
 @mcp.tool()
 def interpret_column_data(
     file_path: str,
-    column_names: list
+    column_names: list,
+    sheet_name: str = 0
 ) -> dict:
     """Interpret column values and return their unique values.
     
@@ -140,9 +141,14 @@ def interpret_column_data(
     - LOW VALUE: Numeric percentage fields (already self-explanatory)
     - CONDITIONAL: Time fields (useful for non-standard formats or categorical time)
     
+    Supported file types:
+    - CSV (.csv) files
+    - Excel (.xlsx, .xls) files (reads first sheet by default)
+    
     Args:
         file_path: Absolute path to data file
         column_names: List of column names to interpret
+        sheet_name: Sheet name or index to read from Excel files (default: 0, first sheet)
         
     Returns:
         dict: Structured interpretation including:
@@ -164,7 +170,7 @@ def interpret_column_data(
         memory_logger = logging.getLogger('memory_usage')
         memory_logger.debug(f"Memory usage before interpret_column_values: {mem_before:.1f}MB")
         
-        result = interpret_column_values(file_path, column_names)
+        result = interpret_column_values(file_path, column_names, sheet_name)
         
         mem_after = process.memory_info().rss / 1024 / 1024  # MB
         memory_logger.debug(f"Memory usage after interpret_column_values: {mem_after:.1f}MB")

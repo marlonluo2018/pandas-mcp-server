@@ -8,7 +8,7 @@ from .data_types import get_descriptive_type
 # Get metadata logger
 logger = logging.getLogger('metadata')
 
-def interpret_column_values(file_path: str, column_names: list) -> dict:
+def interpret_column_values(file_path: str, column_names: list, sheet_name: str = 0) -> dict:
     """Interpret column values in a data file and return their unique values.
     
     This function is most valuable for categorical fields with limited unique values,
@@ -26,6 +26,7 @@ def interpret_column_values(file_path: str, column_names: list) -> dict:
     Args:
         file_path: Path to the data file
         column_names: List of column names to interpret
+        sheet_name: Sheet name or index to read from Excel files (default: 0, first sheet)
         
     Returns:
         dict: Interpretation results including:
@@ -89,11 +90,43 @@ def interpret_column_values(file_path: str, column_names: list) -> dict:
                 },
                 "columns_interpretation": columns_interpretation
             }
+        elif file_ext in ['.xlsx', '.xls']:
+            # Read Excel file
+            logger.info("Processing Excel file for column analysis")
+            
+            # Read the Excel file
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+            
+            # Interpret each requested column
+            columns_interpretation = []
+            for col_name in column_names:
+                if col_name not in df.columns:
+                    columns_interpretation.append({
+                        "column_name": col_name,
+                        "error": f"Column '{col_name}' not found in file"
+                    })
+                    continue
+                
+                col_interpretation = _interpret_single_column(df[col_name])
+                col_interpretation["column_name"] = col_name
+                columns_interpretation.append(col_interpretation)
+            
+            return {
+                "status": "SUCCESS",
+                "file_info": {
+                    "type": "excel",
+                    "size": f"{file_size / 1024:.1f}KB",
+                    "encoding": "binary",
+                    "total_rows": len(df),
+                    "total_columns": len(df.columns)
+                },
+                "columns_interpretation": columns_interpretation
+            }
         else:
             return {
                 "status": "ERROR",
                 "error": "UNSUPPORTED_FILE_TYPE",
-                "message": f"Only CSV files are supported. File type {file_ext} is not supported."
+                "message": f"Only CSV and Excel files are supported. File type {file_ext} is not supported."
             }
             
     except Exception as e:
