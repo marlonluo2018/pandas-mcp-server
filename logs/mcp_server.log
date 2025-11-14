@@ -203,3 +203,19 @@
 2025-10-13 19:59:16,631 - metadata - INFO - Processing CSV file
 2025-10-13 19:59:16,750 - memory_usage - INFO - Final memory usage: 116.7MB
 2025-10-13 19:59:16,750 - metadata - INFO - Metadata processing complete
+2025-10-14 16:11:14,218 - metadata - INFO - Starting metadata processing for file: c:\Project\daily work\googel certificate data\Google Certificate 20 June.csv
+2025-10-14 16:11:14,218 - metadata - INFO - Processing CSV file
+2025-10-14 16:11:14,358 - memory_usage - INFO - Final memory usage: 114.8MB
+2025-10-14 16:11:14,358 - metadata - INFO - Metadata processing complete
+2025-10-14 16:11:19,923 - metadata - INFO - Starting metadata processing for file: c:\Project\daily work\googel certificate data\Google Certificate 10 Oct.csv
+2025-10-14 16:11:19,924 - metadata - INFO - Processing CSV file
+2025-10-14 16:11:20,013 - memory_usage - INFO - Final memory usage: 114.9MB
+2025-10-14 16:11:20,014 - metadata - INFO - Metadata processing complete
+2025-11-08 07:42:52,840 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-24 (12).csv
+2025-11-08 07:42:52,840 - metadata - INFO - Processing CSV file
+2025-11-08 07:42:53,007 - memory_usage - INFO - Final memory usage: 116.3MB
+2025-11-08 07:42:53,007 - metadata - INFO - Metadata processing complete
+2025-11-08 07:44:43,958 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-10-24 (12).csv
+2025-11-08 07:44:43,958 - metadata - INFO - Processing CSV file
+2025-11-08 07:44:44,103 - memory_usage - INFO - Final memory usage: 116.6MB
+2025-11-08 07:44:44,103 - metadata - INFO - Metadata processing complete

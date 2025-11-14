@@ -122,31 +122,6 @@ def read_metadata_tool(file_path: str) -> dict:
         }
 
 @mcp.tool()
-def run_pandas_code_tool(code: str) -> dict:
-    """Execute pandas code with smart suggestions and security checks.
-    
-    Args:
-        code: Python code string containing pandas operations
-        
-    Returns:
-        dict: Either the result or error information
-        
-    Forbidden Operations:
-        The following operations are blocked for security reasons:
-        - 'os.', 'sys.', 'subprocess.' - System access operations
-        - 'open(', 'exec(', 'eval(' - Code execution functions
-        - 'import os', 'import sys' - Specific dangerous imports
-        - 'document.', 'window.', 'XMLHttpRequest' - Browser/DOM access
-        - 'fetch(', 'eval(', 'Function(' - JavaScript/remote operations
-        - 'script', 'javascript:' - Script injection attempts
-        
-    Requirements:
-        - Must assign final result to 'result' variable
-        - Code should contain necessary imports (pandas available as 'pd')
-    """
-    return run_pandas_code(code)
-
-@mcp.tool()
 def interpret_column_data(
     file_path: str,
     column_names: list
@@ -207,6 +182,31 @@ def interpret_column_data(
             "error_type": "TOOL_EXECUTION_ERROR",
             "message": str(e)
         }
+
+@mcp.tool()
+def run_pandas_code_tool(code: str) -> dict:
+    """Execute pandas code with smart suggestions and security checks.
+    
+    Args:
+        code: Python code string containing pandas operations
+        
+    Returns:
+        dict: Either the result or error information
+        
+    Forbidden Operations:
+        The following operations are blocked for security reasons:
+        - 'os.', 'sys.', 'subprocess.' - System access operations
+        - 'open(', 'exec(', 'eval(' - Code execution functions
+        - 'import os', 'import sys' - Specific dangerous imports
+        - 'document.', 'window.', 'XMLHttpRequest' - Browser/DOM access
+        - 'fetch(', 'eval(', 'Function(' - JavaScript/remote operations
+        - 'script', 'javascript:' - Script injection attempts
+        
+    Requirements:
+        - Must assign final result to 'result' variable
+        - Code should contain necessary imports (pandas available as 'pd')
+    """
+    return run_pandas_code(code)
 
 @mcp.tool()
 def generate_chartjs_tool(
