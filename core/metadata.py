@@ -64,6 +64,10 @@ def read_metadata(file_path: str) -> dict:
                 encoding = detect(raw_data)['encoding']
             logger.debug(f"Detected encoding: {encoding}")
             
+            # Count total rows efficiently without loading all data
+            with open(file_path, 'r', encoding=encoding) as f:
+                total_rows = sum(1 for _ in f) - 1  # Subtract 1 for header row
+            
             # Read file with csv reader to handle quoted fields
             with open(file_path, 'r', encoding=encoding) as f:
                 reader = csv.reader(f)
@@ -91,7 +95,7 @@ def read_metadata(file_path: str) -> dict:
                 elif pd.api.types.is_float_dtype(df[col]):
                     df[col] = df[col].astype('float32')
             
-            table_meta = process_sheet(df)
+            table_meta = process_sheet(df, total_rows=total_rows)
             
             return {
                 "status": "SUCCESS",
@@ -113,12 +117,19 @@ def read_metadata(file_path: str) -> dict:
             with pd.ExcelFile(file_path) as excel_file:
                 for sheet_name in excel_file.sheet_names:
                     try:
+                        # Count total rows efficiently using openpyxl
+                        from openpyxl import load_workbook
+                        wb = load_workbook(file_path, read_only=True)
+                        ws = wb[sheet_name]
+                        total_rows = ws.max_row - 1  # Subtract 1 for header row
+                        wb.close()
+                        
                         df = excel_file.parse(
                             sheet_name,
                             nrows=100,
                             dtype={'object': 'category', 'float64': 'float32'}
                         )
-                        sheet_meta = process_sheet(df)
+                        sheet_meta = process_sheet(df, total_rows=total_rows)
                         sheet_meta['sheet_name'] = sheet_name
                         sheets_metadata.append(sheet_meta)
                         
@@ -180,8 +191,13 @@ def read_metadata(file_path: str) -> dict:
         except Exception as e:
             logger.warning(f"Failed to log memory stats: {e}")
 
-def process_sheet(df: pd.DataFrame) -> dict:
-    """Process a single sheet with memory optimizations"""
+def process_sheet(df: pd.DataFrame, total_rows: int = None) -> dict:
+    """Process a single sheet with memory optimizations
+    
+    Args:
+        df: DataFrame containing sampled data (typically 100 rows)
+        total_rows: Actual total rows in the file (if None, uses len(df))
+    """
     import gc
     import logging
     import psutil
@@ -190,6 +206,9 @@ def process_sheet(df: pd.DataFrame) -> dict:
     process = psutil.Process()
     mem_before = process.memory_info().rss / 1024 / 1024
     memory_logger.debug(f"Memory usage before processing sheet: {mem_before:.1f}MB")
+    
+    # Use actual total rows if provided, otherwise use sampled count
+    actual_rows = total_rows if total_rows is not None else len(df)
     
     # Convert to optimal dtypes
     for col in df.columns:
@@ -297,7 +316,7 @@ def process_sheet(df: pd.DataFrame) -> dict:
     memory_logger.debug(f"Memory change during sheet processing: {mem_after - mem_before:.1f}MB")
     
     return {
-        "rows": len(df),
+        "rows": actual_rows,
         "cols": len(df.columns),
         "columns": [
             {
