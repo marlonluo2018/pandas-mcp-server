@@ -37,17 +37,10 @@ def get_descriptive_type(series: pd.Series) -> str:
     }
     
     # Check for datetime types explicitly
-    # Debug input type
-    print(f"Input type: {type(series)}")
-    if hasattr(series, 'shape'):
-        print(f"Input shape: {series.shape}")
-    
     # Handle case where input is actually a DataFrame
     if isinstance(series, pd.DataFrame):
-        print(f"DataFrame with columns: {series.columns}")
         if len(series.columns) == 1:
             series = series.iloc[:, 0]
-            print(f"Converted to Series: {type(series)}")
         else:
             return 'mixed'
     

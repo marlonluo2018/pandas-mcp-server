@@ -1,8 +1,9 @@
 from .chart_generators import BarChartGenerator, PieChartGenerator, LineChartGenerator
 import os
 import traceback
-from .config import CHARTS_DIR
+from .config import CHARTS_DIR, ENABLE_CHART_GENERATION
 from urllib.parse import parse_qs
+from .error_handling import ErrorType, handle_exception, log_and_return_error
 
 def generate_chartjs(
     data: dict,
@@ -12,17 +13,24 @@ def generate_chartjs(
 ) -> dict:
     """Generate interactive Chart.js visualizations from structured data."""
     try:
+        # Check if chart generation is enabled
+        if not ENABLE_CHART_GENERATION:
+            return log_and_return_error(
+                ErrorType.FEATURE_DISABLED,
+                "Chart generation is disabled. Set PANDAS_MCP_ENABLE_CHART_GENERATION=true to enable."
+            )
+        
         if not isinstance(data, dict) or 'columns' not in data:
-            return {
-                "status": "ERROR",
-                "message": "Invalid data format"
-            }
+            return log_and_return_error(
+                ErrorType.INVALID_INPUT,
+                "Invalid data format: expected dict with 'columns' key"
+            )
 
         if not chart_types:
-            return {
-                "status": "ERROR",
-                "message": "Must specify chart types"
-            }
+            return log_and_return_error(
+                ErrorType.INVALID_INPUT,
+                "Must specify chart types"
+            )
 
         # Parse request parameters if provided
         options = {}
@@ -42,26 +50,20 @@ def generate_chartjs(
         elif chart_type == "line":
             generator = LineChartGenerator()
         else:
-            return {
-                "status": "ERROR",
-                "message": f"Invalid chart type '{chart_type}'"
-            }
+            return log_and_return_error(
+                ErrorType.INVALID_INPUT,
+                f"Invalid chart type '{chart_type}'. Must be one of: bar, pie, line"
+            )
 
         # Ensure title is passed properly
         options['title'] = str(title) if title else "Chart"
-
-        # Debug logging
-        print(f"DEBUG - Data structure: {data}")
-        print(f"DEBUG - Columns type: {type(data['columns'])}")
-        if data['columns']:
-            print(f"DEBUG - First column type: {type(data['columns'][0])}")
 
         result = generator.generate(data, **options)
         return result
 
     except Exception as e:
-        return {
-            "status": "ERROR",
-            "message": str(e),
-            "traceback": traceback.format_exc()
-        }
+        return handle_exception(
+            e,
+            ErrorType.TOOL_EXECUTION_ERROR,
+            "Failed to generate chart visualization"
+        )

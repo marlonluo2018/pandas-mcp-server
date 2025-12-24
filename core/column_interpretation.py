@@ -4,6 +4,8 @@ import logging
 from chardet import detect
 from .config import MAX_FILE_SIZE
 from .data_types import get_descriptive_type
+from .validation import validate_file_path, validate_column_names, validate_sheet_name
+from .error_handling import ErrorType, handle_exception, log_and_return_error
 
 # Get metadata logger
 logger = logging.getLogger('metadata')
@@ -38,18 +40,37 @@ def interpret_column_values(file_path: str, column_names: list, sheet_name: str 
         logger.info(f"Starting column value analysis for file: {file_path}")
         logger.debug(f"Columns to interpret: {column_names}")
         
-        # Validate file existence and size
-        if not os.path.exists(file_path):
-            return {"status": "ERROR", "error": "FILE_NOT_FOUND", "path": file_path}
-
+        # Validate file path
+        validation = validate_file_path(file_path)
+        if not validation['valid']:
+            return log_and_return_error(
+                ErrorType.INVALID_FILE_PATH,
+                validation['error']
+            )
+        
+        # Validate column names
+        validation = validate_column_names(column_names)
+        if not validation['valid']:
+            return log_and_return_error(
+                ErrorType.INVALID_COLUMN_NAMES,
+                validation['error']
+            )
+        
+        # Validate sheet name
+        validation = validate_sheet_name(sheet_name)
+        if not validation['valid']:
+            return log_and_return_error(
+                ErrorType.INVALID_SHEET_NAME,
+                validation['error']
+            )
+        
+        # Validate file size
         file_size = os.path.getsize(file_path)
         if file_size > MAX_FILE_SIZE:
-            return {
-                "status": "ERROR",
-                "error": "FILE_TOO_LARGE",
-                "max_size": f"{MAX_FILE_SIZE / 1024 / 1024}MB",
-                "actual_size": f"{file_size / 1024 / 1024:.1f}MB"
-            }
+            return log_and_return_error(
+                ErrorType.FILE_TOO_LARGE,
+                f"File size ({file_size / (1024*1024):.2f} MB) exceeds maximum allowed size ({MAX_FILE_SIZE / (1024*1024):.2f} MB)"
+            )
 
         # Detect file type
         file_ext = os.path.splitext(file_path)[1].lower()
@@ -130,12 +151,11 @@ def interpret_column_values(file_path: str, column_names: list, sheet_name: str 
             }
             
     except Exception as e:
-        logger.error(f"Column value analysis failed: {str(e)}")
-        return {
-            "status": "ERROR",
-            "error_type": type(e).__name__,
-            "message": str(e)
-        }
+        return handle_exception(
+            e,
+            ErrorType.DATA_ERROR,
+            "Failed to interpret column values"
+        )
 
 def _interpret_single_column(series: pd.Series) -> dict:
     """Interpret a single pandas Series and return its unique values and statistics."""

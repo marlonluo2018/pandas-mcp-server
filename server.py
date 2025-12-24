@@ -3,36 +3,34 @@ import traceback
 import os
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
-from core.config import mcp
+from core.config import mcp, LOG_LEVEL, LOG_FILE, LOG_MAX_BYTES, LOG_BACKUP_COUNT
 from core.metadata import read_metadata
 from core.execution import run_pandas_code
 from core.visualization import generate_chartjs
 from core.column_interpretation import interpret_column_values
+from core.error_handling import ErrorType, handle_exception
 
 def setup_logging():
     """Configure logging with all components writing to a single file"""
-    # Create logs directory
-    log_dir = os.path.join(os.path.dirname(__file__), 'logs')
+    # Create logs directory from config
+    log_dir = os.path.dirname(LOG_FILE)
     os.makedirs(log_dir, exist_ok=True)
-
-    # Single log file path
-    log_file = os.path.join(log_dir, 'mcp_server.log')
     
     # Common formatter
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
-    # Configure single rotating file handler
+    # Configure single rotating file handler using config values
     file_handler = RotatingFileHandler(
-        log_file,
-        maxBytes=5*1024*1024,  # 5MB
-        backupCount=3,
+        LOG_FILE,
+        maxBytes=LOG_MAX_BYTES,
+        backupCount=LOG_BACKUP_COUNT,
         encoding='utf-8'
     )
     file_handler.setFormatter(formatter)
     
-    # Configure root logger
+    # Configure root logger using config log level
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=getattr(logging, LOG_LEVEL, logging.INFO),
         handlers=[
             file_handler,
             logging.StreamHandler()
@@ -49,7 +47,7 @@ def setup_logging():
     metadata_logger.addHandler(file_handler)
     metadata_logger.addHandler(logging.StreamHandler())
     
-    return {'server': log_file}
+    return {'server': LOG_FILE}
 
 logger = logging.getLogger(__name__)
 
@@ -113,13 +111,11 @@ def read_metadata_tool(file_path: str) -> dict:
                 logger.debug(f"Error traceback:\n{result['traceback']}")
         return result
     except Exception as e:
-        logger.error(f"Unexpected error in read_metadata_tool: {str(e)}")
-        logger.debug(traceback.format_exc())
-        return {
-            "status": "ERROR",
-            "error_type": "TOOL_EXECUTION_ERROR",
-            "message": str(e)
-        }
+        return handle_exception(
+            e,
+            ErrorType.TOOL_EXECUTION_ERROR,
+            "read_metadata_tool failed"
+        )
 
 @mcp.tool()
 def interpret_column_data(
@@ -181,13 +177,11 @@ def interpret_column_data(
         
         return result
     except Exception as e:
-        logger.error(f"Unexpected error in interpret_column_data: {str(e)}")
-        logger.debug(traceback.format_exc())
-        return {
-            "status": "ERROR",
-            "error_type": "TOOL_EXECUTION_ERROR",
-            "message": str(e)
-        }
+        return handle_exception(
+            e,
+            ErrorType.TOOL_EXECUTION_ERROR,
+            "interpret_column_data failed"
+        )
 
 @mcp.tool()
 def run_pandas_code_tool(code: str) -> dict:
@@ -273,7 +267,7 @@ def main():
         logger.debug("Starting stdio MCP server...")
         mcp.run()
     except Exception as e:
-        logger.error(f"Server failed to start: {str(e)}")
+        logger.error(f"Server failed to start: {handle_exception(e, ErrorType.INTERNAL_ERROR, 'Server startup failed')['message']}")
         logger.debug(traceback.format_exc())
         raise
 

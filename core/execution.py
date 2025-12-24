@@ -2,7 +2,9 @@ import sys
 from io import StringIO
 import traceback
 import pandas as pd
-from .config import BLACKLIST
+from .config import BLACKLIST, MAX_FILE_SIZE, ENABLE_CODE_EXECUTION
+from .validation import validate_pandas_code
+from .error_handling import ErrorType, handle_exception, log_and_return_error
 import logging
 
 logger = logging.getLogger(__name__)
@@ -61,35 +63,30 @@ def run_pandas_code(code: str) -> dict:
             }
         }
     """
+    # Check if code execution is enabled
+    if not ENABLE_CODE_EXECUTION:
+        return {
+            "content": [],
+            "isError": True,
+            "message": "Code execution is disabled. Set PANDAS_MCP_ENABLE_CODE_EXECUTION=true to enable."
+        }
+    
+    # Validate code first
+    validation = validate_pandas_code(code)
+    if not validation['valid']:
+        return {
+            "content": [],
+            "isError": True,
+            "message": validation['error']
+        }
+    
     # Security checks
     for forbidden in BLACKLIST:
         if forbidden in code:
-            # Find the line number where the forbidden operation occurs
-            lines = code.split('\n')
-            forbidden_lines = []
-            for i, line in enumerate(lines, 1):
-                if forbidden in line:
-                    forbidden_lines.append(f"Line {i}: {line.strip()}")
-            
-            # Create detailed error message
-            error_details = {
-                "forbidden_operation": forbidden,
-                "reason": get_forbidden_reason(forbidden),
-                "locations": forbidden_lines,
-                "all_forbidden_operations": BLACKLIST
-            }
-            
-            logger.warning(f"Security violation: {forbidden} found in code")
-            for line in forbidden_lines:
-                logger.warning(f"  {line}")
-            
             return {
                 "content": [],
                 "isError": True,
-                "error_type": "SECURITY_VIOLATION",
-                "message": f"Forbidden operation detected: {forbidden}",
-                "details": error_details,
-                "solution": f"Remove '{forbidden}' from your code. Use pandas operations instead."
+                "message": f"Code contains forbidden operation: {forbidden}"
             }
 
     # Prepare execution environment with memory optimizations
@@ -106,31 +103,33 @@ def run_pandas_code(code: str) -> dict:
         # First check for syntax errors
         try:
             compile(code, '<string>', 'exec')
-        except Exception as e:  # Catch all compilation errors
-            logger.error(f"Code compilation failed: {str(e)}")
+        except SyntaxError as e:
             return {
                 "content": [],
-                "error": {
-                    "isError": True,
-                    "message": f"Code error: {str(e)}",
-                    "traceback": traceback.format_exc(),
-                    "output": stdout_capture.getvalue()
-                }
+                "isError": True,
+                "message": f"Code compilation failed: {str(e)}",
+                "traceback": traceback.format_exc(),
+                "output": stdout_capture.getvalue()
+            }
+        except Exception as e:
+            return {
+                "content": [],
+                "isError": True,
+                "message": f"Code compilation failed: {str(e)}",
+                "traceback": traceback.format_exc(),
+                "output": stdout_capture.getvalue()
             }
 
         # Execute with memory monitoring
         try:
             exec(code, {}, local_vars)
         except Exception as e:
-            logger.error(f"Code execution failed: {str(e)}")
             return {
                 "content": [],
-                "error": {
-                    "isError": True,
-                    "message": str(e),
-                    "traceback": traceback.format_exc(),
-                    "output": stdout_capture.getvalue()
-                }
+                "isError": True,
+                "message": f"Code execution failed: {str(e)}",
+                "traceback": traceback.format_exc(),
+                "output": stdout_capture.getvalue()
             }
         
         # Clear intermediate variables
@@ -153,7 +152,10 @@ def run_pandas_code(code: str) -> dict:
         # Handle memory optimization for large DataFrames/Series
         if isinstance(result, (pd.DataFrame, pd.Series)):
             if hasattr(result, 'memory_usage'):
-                mem_usage = result.memory_usage(deep=True).sum()
+                mem_usage = result.memory_usage(deep=True)
+                # For Series, memory_usage returns a scalar; for DataFrame, it returns a Series
+                if isinstance(mem_usage, pd.Series):
+                    mem_usage = mem_usage.sum()
                 if mem_usage > 1e8:  # >100MB
                     result = result.head(100)
         

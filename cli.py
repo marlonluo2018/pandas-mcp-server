@@ -8,6 +8,7 @@ from typing import Optional
 from core.metadata import read_metadata
 from core.execution import run_pandas_code
 from core.visualization import generate_chartjs
+from core.error_handling import ErrorType, handle_exception
 
 # Configure logging
 logging.basicConfig(
@@ -18,19 +19,46 @@ logger = logging.getLogger(__name__)
 
 
 
-def read_metadata_cli(file_path: str) -> None:
+def read_metadata_cli(file_path: str, output_path: Optional[str] = None) -> None:
     """CLI wrapper for read_metadata functionality."""
-
-    result = read_metadata(file_path)
-    print(result)    
+    try:
+        result = read_metadata(file_path)
+        if output_path:
+            with open(output_path, 'w') as f:
+                json.dump(result, f, indent=2)
+            print(f"Result saved to {output_path}")
+        else:
+            print(json.dumps(result, indent=2))
+    except Exception as e:
+        error = handle_exception(e, ErrorType.TOOL_EXECUTION_ERROR, "read_metadata_cli failed")
+        print(f"Error: {error['message']}", file=sys.stderr)
+        sys.exit(1)    
        
 
-def run_pandas_code_cli(script_path: str) -> None:
+def run_pandas_code_cli(script_path: str, output_path: Optional[str] = None) -> None:
     """CLI wrapper for run_pandas_code functionality."""
-    with open(script_path, 'r') as f:
-        code = f.read()
-    result = run_pandas_code(code)
-    print(result)
+    try:
+        with open(script_path, 'r') as f:
+            code = f.read()
+        result = run_pandas_code(code)
+        if output_path:
+            with open(output_path, 'w') as f:
+                json.dump(result, f, indent=2)
+            print(f"Result saved to {output_path}")
+        else:
+            print(json.dumps(result, indent=2))
+    except FileNotFoundError:
+        error = handle_exception(
+            FileNotFoundError(f"Script file not found: {script_path}"),
+            ErrorType.FILE_NOT_FOUND,
+            "run_pandas_code_cli failed"
+        )
+        print(f"Error: {error['message']}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        error = handle_exception(e, ErrorType.TOOL_EXECUTION_ERROR, "run_pandas_code_cli failed")
+        print(f"Error: {error['message']}", file=sys.stderr)
+        sys.exit(1)
        
 def generate_chart_cli(
     data_path: str,
@@ -39,10 +67,28 @@ def generate_chart_cli(
     output_path: str = None
 ) -> None:
     """CLI wrapper for generate_chartjs functionality."""
-    with open(data_path, 'r') as f:
-        data = json.load(f)
-    result = generate_chartjs(data, [chart_type], title)
-    print(result)
+    try:
+        with open(data_path, 'r') as f:
+            data = json.load(f)
+        result = generate_chartjs(data, [chart_type], title)
+        if output_path:
+            with open(output_path, 'w') as f:
+                json.dump(result, f, indent=2)
+            print(f"Result saved to {output_path}")
+        else:
+            print(json.dumps(result, indent=2))
+    except FileNotFoundError:
+        error = handle_exception(
+            FileNotFoundError(f"Data file not found: {data_path}"),
+            ErrorType.FILE_NOT_FOUND,
+            "generate_chart_cli failed"
+        )
+        print(f"Error: {error['message']}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        error = handle_exception(e, ErrorType.TOOL_EXECUTION_ERROR, "generate_chart_cli failed")
+        print(f"Error: {error['message']}", file=sys.stderr)
+        sys.exit(1)
        
 def interactive_mode():
     """Run in interactive menu-driven mode."""
@@ -62,21 +108,19 @@ def interactive_mode():
             file_path = input("Enter file path (Excel/CSV): ").strip('"\'')
             output = input("Output file (leave blank for console): ").strip('"\'')
             try:
-                read_metadata_cli(file_path)
-            except FileNotFoundError:
-                print(f"Error: File not found - {file_path}")
+                read_metadata_cli(file_path, output)
             except Exception as e:
-                print(f"Error: {str(e)}")
+                error = handle_exception(e, ErrorType.TOOL_EXECUTION_ERROR, "Interactive metadata read failed")
+                print(f"Error: {error['message']}", file=sys.stderr)
             
         elif choice == "2":
             file_path = input("Enter Python script path: ").strip('"\'')
             output = input("Output file (leave blank for console): ").strip('"\'')
             try:
-                run_pandas_code_cli(file_path)
-            except FileNotFoundError:
-                print(f"Error: File not found - {file_path}")
+                run_pandas_code_cli(file_path, output)
             except Exception as e:
-                print(f"Error: {str(e)}")
+                error = handle_exception(e, ErrorType.TOOL_EXECUTION_ERROR, "Interactive code execution failed")
+                print(f"Error: {error['message']}", file=sys.stderr)
             
         elif choice == "3":
             file_path = input("Enter JSON data file path: ").strip('"\'')
@@ -87,11 +131,10 @@ def interactive_mode():
                 if chart_type not in ['bar', 'line', 'pie']:
                     print("Invalid chart type. Must be one of: bar, line, pie")
                     continue
-                generate_chart_cli(file_path, chart_type, title)
-            except FileNotFoundError:
-                print(f"Error: File not found - {file_path}")
+                generate_chart_cli(file_path, chart_type, title, output)
             except Exception as e:
-                print(f"Error: {str(e)}")
+                error = handle_exception(e, ErrorType.TOOL_EXECUTION_ERROR, "Interactive chart generation failed")
+                print(f"Error: {error['message']}", file=sys.stderr)
             
         elif choice == "4":
             print("Exiting...")

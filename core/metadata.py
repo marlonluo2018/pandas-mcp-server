@@ -6,6 +6,8 @@ import pandas as pd
 from chardet import detect
 from .config import MAX_FILE_SIZE
 from .data_types import get_descriptive_type
+from .validation import validate_file_path
+from .error_handling import ErrorType, handle_exception, log_and_return_error
 
 # Get metadata logger
 logger = logging.getLogger('metadata')
@@ -35,18 +37,21 @@ def read_metadata(file_path: str) -> dict:
         logger.info(f"Starting metadata processing for file: {file_path}")
         logger.debug(f"File extension: {os.path.splitext(file_path)[1].lower()}")
         
-        # Validate file existence and size
-        if not os.path.exists(file_path):
-            return {"status": "ERROR", "error": "FILE_NOT_FOUND", "path": file_path}
-
+        # Validate file path
+        validation = validate_file_path(file_path)
+        if not validation['valid']:
+            return log_and_return_error(
+                ErrorType.INVALID_FILE_PATH,
+                validation['error']
+            )
+        
+        # Validate file size
         file_size = os.path.getsize(file_path)
         if file_size > MAX_FILE_SIZE:
-            return {
-                "status": "ERROR",
-                "error": "FILE_TOO_LARGE",
-                "max_size": f"{MAX_FILE_SIZE / 1024 / 1024}MB",
-                "actual_size": f"{file_size / 1024 / 1024:.1f}MB"
-            }
+            return log_and_return_error(
+                ErrorType.FILE_TOO_LARGE,
+                f"File size ({file_size / (1024*1024):.2f} MB) exceeds maximum allowed size ({MAX_FILE_SIZE / (1024*1024):.2f} MB)"
+            )
 
         # Detect file type
         file_ext = os.path.splitext(file_path)[1].lower()
@@ -158,21 +163,11 @@ def read_metadata(file_path: str) -> dict:
             }
             
     except Exception as e:
-        error_info = {
-            "status": "ERROR",
-            "error_type": type(e).__name__,
-            "message": str(e),
-            "solution": [
-                "Check if the file is being used by another program",
-                "Try saving the file as UTF-8 encoded CSV",
-                "Contact the administrator to check MCP file access permissions"
-            ],
-            "traceback": traceback.format_exc()
-        }
-        logger.error(f"Metadata processing failed: {error_info['error_type']}")
-        logger.debug(f"Error details: {error_info['message']}")
-        logger.debug(f"Full traceback:\n{error_info['traceback']}")
-        return error_info
+        return handle_exception(
+            e,
+            ErrorType.FILE_NOT_FOUND,
+            "Failed to read file metadata"
+        )
     finally:
         # Log final memory stats
         try:
@@ -225,11 +220,11 @@ def process_sheet(df: pd.DataFrame) -> dict:
             "type": col_type,
             "examples": examples,
             "stats": {
-                "null_count": series.isnull().sum(),
-                "unique_count": series.nunique(),
-                "is_numeric": pd.api.types.is_numeric_dtype(series),
-                "is_temporal": pd.api.types.is_datetime64_any_dtype(series),
-                "is_categorical": series.nunique() < 20 and pd.api.types.is_string_dtype(series)
+                "null_count": int(series.isnull().sum()),
+                "unique_count": int(series.nunique()),
+                "is_numeric": bool(pd.api.types.is_numeric_dtype(series)),
+                "is_temporal": bool(pd.api.types.is_datetime64_any_dtype(series)),
+                "is_categorical": bool(series.nunique() < 20 and pd.api.types.is_string_dtype(series))
             },
             "warnings": [],
             "suggested_operations": []

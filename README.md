@@ -51,7 +51,23 @@ cd pandas-mcp-server
 pip install -r requirements.txt
 ```
 
-### Step 3: Verify Installation
+### Step 3: Configure Environment Variables (Optional)
+The server supports extensive configuration through environment variables. Copy the example configuration file:
+
+```bash
+cp .env.example .env
+```
+
+Edit the `.env` file to customize settings such as:
+- Log levels and file locations
+- File size limits
+- Feature flags (enable/disable chart generation, code execution)
+- Memory monitoring settings
+- Security blacklist extensions
+
+For detailed configuration options, see [CONFIGURATION.md](CONFIGURATION.md).
+
+### Step 4: Verify Installation
 ```bash
 # Test the CLI interface
 python cli.py

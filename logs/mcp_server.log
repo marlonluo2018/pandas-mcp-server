@@ -238,3 +238,9 @@
 2025-11-14 13:07:52,166 - metadata - INFO - Processing Excel file
 2025-11-14 13:07:53,757 - memory_usage - INFO - Final memory usage: 220.9MB
 2025-11-14 13:07:53,757 - metadata - INFO - Metadata processing complete
+2025-12-24 14:00:32,548 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential daily T2G Report Updated on 2025-12-24.csv
+2025-12-24 14:00:32,552 - metadata - INFO - Processing CSV file
+2025-12-24 14:00:32,665 - memory_usage - INFO - Final memory usage: 117.5MB
+2025-12-24 14:00:32,666 - metadata - INFO - Metadata processing complete
+2025-12-24 14:11:12,816 - metadata - INFO - Starting column value analysis for file: C:\Users\MengNingLuo\Downloads\Credential daily T2G Report Updated on 2025-12-24.csv
+2025-12-24 14:11:12,843 - metadata - INFO - Processing CSV file for column analysis
