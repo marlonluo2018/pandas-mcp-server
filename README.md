@@ -1,7 +1,7 @@
 # Pandas-MCP Server
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![GitHub stars](https://img.shields.io/github/stars/marlonluo2018/pandas-mcp-server?style=social)](https://github.com/marlonluo2018/pandas-mcp-server)
 
@@ -36,7 +36,7 @@ The Pandas-MCP Server is designed as a **Model Context Protocol (MCP) server** t
 ## 🛠️ Installation
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.10+
 - pip package manager
 - Git (for cloning the repository)
 
@@ -82,7 +82,40 @@ python server.py
 - **chardet>=5.0.0** - Character encoding detection
 - **psutil** - System monitoring for memory optimization
 
+### Installation with uvx (Recommended)
+
+**uvx** is a fast Python package installer and runner that makes it easy to run Python tools without manual environment setup.
+
+#### Install uvx
+```bash
+# Using pip
+pip install uv
+
+# Or using pipx (recommended for isolation)
+pipx install uv
+```
+
+#### Run with uvx
+```bash
+# Run the MCP server directly (from local directory)
+uvx --from . pandas-mcp-server
+
+# Run the CLI tool (from local directory)
+uvx --from . pandas-mcp-cli
+
+# Run with additional arguments
+uvx --from . pandas-mcp-cli metadata data.xlsx
+```
+
+#### uvx Advantages
+- **No manual installation**: Automatically downloads and runs the package
+- **Isolated environments**: Each run uses a clean virtual environment
+- **Fast**: Uses uv's fast dependency resolver
+- **Version pinning**: Easy to run specific versions
+
 ### Claude Desktop Configuration
+
+#### Using Python (Traditional)
 Add this configuration to your Claude Desktop settings:
 
 ```json
@@ -97,11 +130,32 @@ Add this configuration to your Claude Desktop settings:
 }
 ```
 
-**Note**: Replace `/path/to/your/pandas-mcp-server/server.py` with the actual path where you cloned the repository.
+#### Using uvx (Recommended)
+Add this configuration to your Claude Desktop settings:
 
-**Example paths:**
-- Windows: `"C:\\Users\\YourName\\pandas-mcp-server\\server.py"`
-- macOS/Linux: `"/home/username/pandas-mcp-server/server.py"`
+```json
+{
+  "mcpServers": {
+    "pandas-server": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--from", "/path/to/pandas-mcp-server", "pandas-mcp-server"]
+    }
+  }
+}
+```
+
+**Path Format by Operating System:**
+
+- **Windows**: Use forward slashes (recommended) or escaped backslashes
+  - `C:/Project/pandas-mcp-server` (recommended)
+  - `C:\\Project\\pandas-mcp-server` (escaped backslashes)
+  
+- **macOS/Linux**: Use forward slashes
+  - `/Users/username/projects/pandas-mcp-server`
+  - `/home/username/projects/pandas-mcp-server`
+
+**Note**: Replace `/path/to/pandas-mcp-server` with the absolute path to your pandas-mcp-server directory. The full path is required because Claude Desktop executes commands from its own working directory.
 
 ### Configuration File Location
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -341,11 +395,15 @@ Generate interactive charts with Chart.js:
 
 ### CLI Interface (Testing & Development)
 
-The `cli.py` provides a convenient command-line interface for testing the MCP server functionality without requiring an MCP client:
+The CLI provides a convenient command-line interface for testing the MCP server functionality without requiring an MCP client:
 
 #### Interactive Mode
 ```bash
+# Using Python
 python cli.py
+
+# Using uvx
+uvx pandas-mcp-cli
 ```
 Launches a guided menu system with:
 - Step-by-step workflow guidance
@@ -357,15 +415,19 @@ Launches a guided menu system with:
 ```bash
 # Read metadata
 python cli.py metadata data.xlsx
+uvx pandas-mcp-cli metadata data.xlsx
 
 # Interpret column values (useful for multiple CSV files)
 python cli.py interpret data.csv --columns "Region,Status"
+uvx pandas-mcp-cli interpret data.csv --columns "Region,Status"
 
 # Execute pandas code
 python cli.py execute analysis.py
+uvx pandas-mcp-cli execute analysis.py
 
 # Generate charts
 python cli.py chart data.json --type bar --title "Sales Analysis"
+uvx pandas-mcp-cli chart data.json --type bar --title "Sales Analysis"
 ```
 
 #### Chart Output Information
