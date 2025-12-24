@@ -82,11 +82,13 @@ python server.py
 - **chardet>=5.0.0** - Character encoding detection
 - **psutil** - System monitoring for memory optimization
 
-### Installation with uvx (Recommended)
+### Claude Desktop Configuration
+
+#### Using uvx (Recommended)
 
 **uvx** is a fast Python package installer and runner that makes it easy to run Python tools without manual environment setup.
 
-#### Install uvx
+##### Install uvx
 ```bash
 # Using pip
 pip install uv
@@ -95,43 +97,13 @@ pip install uv
 pipx install uv
 ```
 
-#### Run with uvx
-```bash
-# Run the MCP server directly (from local directory)
-uvx --from . pandas-mcp-server
-
-# Run the CLI tool (from local directory)
-uvx --from . pandas-mcp-cli
-
-# Run with additional arguments
-uvx --from . pandas-mcp-cli metadata data.xlsx
-```
-
-#### uvx Advantages
+##### uvx Advantages
 - **No manual installation**: Automatically downloads and runs the package
 - **Isolated environments**: Each run uses a clean virtual environment
 - **Fast**: Uses uv's fast dependency resolver
 - **Version pinning**: Easy to run specific versions
 
-### Claude Desktop Configuration
-
-#### Using Python (Traditional)
-Add this configuration to your Claude Desktop settings:
-
-```json
-{
-  "mcpServers": {
-    "pandas-server": {
-      "type": "stdio",
-      "command": "python",
-      "args": ["/path/to/your/pandas-mcp-server/server.py"]
-    }
-  }
-}
-```
-
-#### Using uvx (Recommended)
-Add this configuration to your Claude Desktop settings:
+##### Add this configuration to your Claude Desktop settings:
 
 ```json
 {
@@ -156,6 +128,21 @@ Add this configuration to your Claude Desktop settings:
   - `/home/username/projects/pandas-mcp-server`
 
 **Note**: Replace `/path/to/pandas-mcp-server` with the absolute path to your pandas-mcp-server directory. The full path is required because Claude Desktop executes commands from its own working directory.
+
+#### Using Python (Traditional)
+Add this configuration to your Claude Desktop settings:
+
+```json
+{
+  "mcpServers": {
+    "pandas-server": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["/path/to/your/pandas-mcp-server/server.py"]
+    }
+  }
+}
+```
 
 ### Configuration File Location
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`

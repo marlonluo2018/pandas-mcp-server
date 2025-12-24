@@ -256,3 +256,7 @@
 2025-12-24 21:59:45,452 - metadata - INFO - Processing CSV file
 2025-12-24 21:59:45,632 - memory_usage - INFO - Final memory usage: 116.9MB
 2025-12-24 21:59:45,634 - metadata - INFO - Metadata processing complete
+2025-12-24 22:06:55,061 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\2025-12-15 IBM Certifications and Exams.xlsx
+2025-12-24 22:06:55,064 - metadata - INFO - Processing Excel file
+2025-12-24 22:07:01,095 - memory_usage - INFO - Final memory usage: 136.6MB
+2025-12-24 22:07:01,097 - metadata - INFO - Metadata processing complete
