@@ -223,3 +223,18 @@
 2025-11-14 12:46:23,537 - metadata - INFO - Processing Excel file
 2025-11-14 12:46:25,180 - memory_usage - INFO - Final memory usage: 126.2MB
 2025-11-14 12:46:25,180 - metadata - INFO - Metadata processing complete
+2025-11-14 12:57:21,671 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-11-07(5).xlsx
+2025-11-14 12:57:21,672 - metadata - INFO - Processing Excel file
+2025-11-14 12:57:23,114 - memory_usage - INFO - Final memory usage: 126.3MB
+2025-11-14 12:57:23,114 - metadata - INFO - Metadata processing complete
+2025-11-14 13:04:39,950 - metadata - INFO - Starting metadata processing for file: user_file.csv
+2025-11-14 13:04:39,950 - memory_usage - INFO - Final memory usage: 219.7MB
+2025-11-14 13:04:39,950 - metadata - INFO - Metadata processing complete
+2025-11-14 13:05:17,107 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-11-07(5).xlsx
+2025-11-14 13:05:17,107 - metadata - INFO - Processing Excel file
+2025-11-14 13:05:18,688 - memory_usage - INFO - Final memory usage: 219.7MB
+2025-11-14 13:05:18,688 - metadata - INFO - Metadata processing complete
+2025-11-14 13:07:52,166 - metadata - INFO - Starting metadata processing for file: C:\Users\MengNingLuo\Downloads\Credential T2G Report Updated on 2025-11-07(5).xlsx
+2025-11-14 13:07:52,166 - metadata - INFO - Processing Excel file
+2025-11-14 13:07:53,757 - memory_usage - INFO - Final memory usage: 220.9MB
+2025-11-14 13:07:53,757 - metadata - INFO - Metadata processing complete
