@@ -70,6 +70,30 @@ The Pandas MCP Server supports extensive configuration through environment varia
 - **Valid Values**: `true`, `false`, `1`, `0`, `yes`, `no`, `on`, `off`
 - **Example**: `PANDAS_MCP_ENABLE_CODE_EXECUTION=true`
 
+### Transport Configuration
+
+#### `PANDAS_MCP_TRANSPORT`
+- **Description**: Transport protocol for the MCP server
+- **Default**: `stdio`
+- **Valid Values**: `stdio`, `sse`, `streamable-http`
+- **Example**: `PANDAS_MCP_TRANSPORT=sse`
+
+| Value | Description |
+|-------|-------------|
+| `stdio` | Standard input/output (default, for CLI clients like Claude Desktop) |
+| `sse` | Server-Sent Events over HTTP (for remote access, real-time bidirectional) |
+| `streamable-http` | HTTP streaming (for remote access, RESTful style) |
+
+#### `FASTMCP_HOST`
+- **Description**: HTTP server bind address (only used with `sse` or `streamable-http` transport)
+- **Default**: `127.0.0.1`
+- **Example**: `FASTMCP_HOST=0.0.0.0` (listen on all interfaces for remote access)
+
+#### `FASTMCP_PORT`
+- **Description**: HTTP server port (only used with `sse` or `streamable-http` transport)
+- **Default**: `8000`
+- **Example**: `FASTMCP_PORT=9000`
+
 ### Security Configuration
 
 #### `PANDAS_MCP_BLACKLIST`
@@ -295,4 +319,23 @@ PANDAS_MCP_MAX_FILE_SIZE=52428800
 PANDAS_MCP_ENABLE_CHART_GENERATION=false
 PANDAS_MCP_ENABLE_CODE_EXECUTION=false
 PANDAS_MCP_BLACKLIST=eval,exec,subprocess,os.system,sys.exit,compile
+```
+
+### Remote Access (HTTP/SSE)
+```bash
+# Enable SSE transport for remote HTTP access
+PANDAS_MCP_TRANSPORT=sse
+FASTMCP_HOST=0.0.0.0
+FASTMCP_PORT=8000
+PANDAS_MCP_LOG_LEVEL=INFO
+PANDAS_MCP_ENABLE_MEMORY_MONITORING=true
+```
+
+### Remote Access (Streamable HTTP)
+```bash
+# Enable streamable HTTP transport
+PANDAS_MCP_TRANSPORT=streamable-http
+FASTMCP_HOST=0.0.0.0
+FASTMCP_PORT=8000
+PANDAS_MCP_LOG_LEVEL=INFO
 ```

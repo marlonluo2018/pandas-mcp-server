@@ -61,8 +61,17 @@ MEMORY_WARNING_THRESHOLD = get_env_int('PANDAS_MCP_MEMORY_WARNING_THRESHOLD', 50
 ENABLE_CHART_GENERATION = get_env_bool('PANDAS_MCP_ENABLE_CHART_GENERATION', True)
 ENABLE_CODE_EXECUTION = get_env_bool('PANDAS_MCP_ENABLE_CODE_EXECUTION', True)
 
+# Transport configuration
+# Options: 'stdio' (default), 'sse', 'streamable-http'
+TRANSPORT_MODE = os.getenv('PANDAS_MCP_TRANSPORT', 'stdio')
+# HTTP settings (used when transport is 'sse' or 'streamable-http')
+# These use FASTMCP_ prefix as they're passed directly to FastMCP
+HTTP_HOST = os.getenv('FASTMCP_HOST', '127.0.0.1')
+HTTP_PORT = get_env_int('FASTMCP_PORT', 8000)
+
 # MCP Server Initialization
-mcp = FastMCP("Excel-MCP-Server")
+# Pass host/port explicitly to ensure environment variables are respected
+mcp = FastMCP("Excel-MCP-Server", host=HTTP_HOST, port=HTTP_PORT)
 
 
 def print_config():
@@ -70,6 +79,9 @@ def print_config():
     print("=" * 60)
     print("Pandas MCP Server Configuration")
     print("=" * 60)
+    print(f"TRANSPORT_MODE: {TRANSPORT_MODE}")
+    print(f"HTTP_HOST: {HTTP_HOST}")
+    print(f"HTTP_PORT: {HTTP_PORT}")
     print(f"CHARTS_DIR: {CHARTS_DIR}")
     print(f"MAX_FILE_SIZE: {MAX_FILE_SIZE / (1024*1024):.2f} MB")
     print(f"LOG_LEVEL: {LOG_LEVEL}")

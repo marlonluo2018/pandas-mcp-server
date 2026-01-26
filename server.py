@@ -3,7 +3,7 @@ import traceback
 import os
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
-from core.config import mcp, LOG_LEVEL, LOG_FILE, LOG_MAX_BYTES, LOG_BACKUP_COUNT
+from core.config import mcp, LOG_LEVEL, LOG_FILE, LOG_MAX_BYTES, LOG_BACKUP_COUNT, TRANSPORT_MODE, HTTP_HOST, HTTP_PORT
 from core.metadata import read_metadata
 from core.execution import run_pandas_code
 from core.visualization import generate_chartjs
@@ -263,9 +263,21 @@ def main():
     try:
         if not init_logging():
             raise RuntimeError("Failed to initialize logging")
-            
-        logger.debug("Starting stdio MCP server...")
-        mcp.run()
+
+        valid_transports = ['stdio', 'sse', 'streamable-http']
+        if TRANSPORT_MODE not in valid_transports:
+            raise ValueError(f"Invalid PANDAS_MCP_TRANSPORT: '{TRANSPORT_MODE}'. Must be one of: {valid_transports}")
+
+        logger.info(f"Starting MCP server with transport: {TRANSPORT_MODE}")
+        if TRANSPORT_MODE in ['sse', 'streamable-http']:
+            logger.info(f"HTTP server will listen on {HTTP_HOST}:{HTTP_PORT}")
+
+        if TRANSPORT_MODE == 'stdio':
+            mcp.run()
+        elif TRANSPORT_MODE == 'sse':
+            mcp.run(transport='sse')
+        elif TRANSPORT_MODE == 'streamable-http':
+            mcp.run(transport='streamable-http')
     except Exception as e:
         logger.error(f"Server failed to start: {handle_exception(e, ErrorType.INTERNAL_ERROR, 'Server startup failed')['message']}")
         logger.debug(traceback.format_exc())

@@ -149,6 +149,54 @@ Add this configuration to your Claude Desktop settings:
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
+### Remote Access (HTTP/SSE)
+
+The server supports HTTP transport for remote access, enabling connections from anywhere on the network.
+
+#### Starting with HTTP Transport
+
+```bash
+# SSE Transport (recommended for real-time bidirectional communication)
+PANDAS_MCP_TRANSPORT=sse FASTMCP_HOST=0.0.0.0 FASTMCP_PORT=8000 python server.py
+
+# Streamable HTTP Transport (RESTful style)
+PANDAS_MCP_TRANSPORT=streamable-http FASTMCP_HOST=0.0.0.0 FASTMCP_PORT=8000 python server.py
+```
+
+#### Transport Options
+
+| Transport | Description | Use Case |
+|-----------|-------------|----------|
+| `stdio` | Standard input/output (default) | Local CLI clients like Claude Desktop |
+| `sse` | Server-Sent Events over HTTP | Remote access, real-time bidirectional |
+| `streamable-http` | HTTP streaming | Remote access, RESTful style, load balancing |
+
+#### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PANDAS_MCP_TRANSPORT` | `stdio` | Transport mode: `stdio`, `sse`, `streamable-http` |
+| `FASTMCP_HOST` | `127.0.0.1` | HTTP bind address (`0.0.0.0` for all interfaces) |
+| `FASTMCP_PORT` | `8000` | HTTP server port |
+
+#### Claude Desktop Configuration for Remote Server
+
+```json
+{
+  "mcpServers": {
+    "pandas-server": {
+      "url": "http://your-server:8000/sse"
+    }
+  }
+}
+```
+
+#### Security Note
+When exposing to network (`FASTMCP_HOST=0.0.0.0`), consider:
+- Running behind a reverse proxy with authentication
+- Using firewall rules to restrict access
+- The existing code execution BLACKLIST still applies
+
 ### Verification
 After configuration, restart Claude Desktop. The server should appear in the MCP tools list with four available tools:
 - `read_metadata_tool` - File analysis
